@@ -1,10 +1,11 @@
 // Minimal Sand Study app (ESM)
+import * as storage from './src/storage.js';
 const UNIT_SEC = 37.5;
 const BOTTLE_CAP = 100;
 const AUTO_SAVE_TIME = 30; // seconds
 const MAX_FIELD = 50; // max chars per field (taskname / insight / nexttask)
 let sessionStart = null; // epoch seconds or null
-let today = loadToday();
+let today = storage.loadToday();
 let countdownId = null;
 let countdownRemaining = AUTO_SAVE_TIME;
 let timerIntervalId = null; // for elapsed display
@@ -252,7 +253,7 @@ function saveTaskAndClose(){
       if(updates.taskname.length > MAX_FIELD) updates.taskname = updates.taskname.slice(0, MAX_FIELD);
       if(updates.insight.length > MAX_FIELD) updates.insight = updates.insight.slice(0, MAX_FIELD);
       if(updates.nexttask.length > MAX_FIELD) updates.nexttask = updates.nexttask.slice(0, MAX_FIELD);
-      const ok = updateTask(editingTaskId, updates);
+  const ok = storage.updateTask(editingTaskId, updates);
       if(!ok){ showToast('編集の保存に失敗しました'); console.error('updateTask returned false'); return; }
       editingTaskId = null;
       try{ showToast('編集を保存しました'); }catch(e){}
@@ -296,7 +297,7 @@ function saveTaskAndClose(){
 
   try{
   if(DEV) console.log('saveTaskAndClose: task object', t);
-    const ok = saveTask(t);
+  const ok = storage.saveTask(t);
     if(!ok){
       showToast('保存に失敗しました');
       console.error('saveTask returned false');
@@ -537,8 +538,8 @@ function applyLayer(u){
   today.layerTotal = (today.layerTotal || 0) + u;
   const bottles = Math.floor(today.layerTotal / BOTTLE_CAP);
   today.bottlesToday = bottles;
-  today.bottlesCum = loadCumBase() + bottles;
-  saveToday(today);
+  today.bottlesCum = storage.loadCumBase() + bottles;
+  storage.saveToday(today);
 }
 
 function render(){
@@ -695,55 +696,11 @@ function showToast(msg, ms = 2000){
   }catch(e){ console.warn('showToast failed', e); }
 }
 
-function keyDay(){ return new Date().toISOString().slice(0,10); }
-
-function loadToday(){
-  rolloverIfNeeded();
-  const key = `daily:${keyDay()}`;
-  const raw = localStorage.getItem(key);
-  if(raw) return JSON.parse(raw);
-  return { date: keyDay(), layerTotal:0, bottlesToday:0, bottlesCum: loadCumBase() };
-}
-
-function saveToday(d){ localStorage.setItem(`daily:${keyDay()}`, JSON.stringify(d)); }
-
-function loadCumBase(){ const base = localStorage.getItem("cum_base"); return base? +base : 0; }
-
-function rolloverIfNeeded(){
-  const last = localStorage.getItem("last_date");
-  const todayStr = keyDay();
-  if(last && last !== todayStr){
-    const prevRaw = localStorage.getItem(`daily:${last}`);
-    if(prevRaw){
-      try{
-        const y = JSON.parse(prevRaw);
-        const add = (y.bottlesToday||0);
-        localStorage.setItem("cum_base", String((+loadCumBase()) + add));
-      }catch(e){/* ignore */}
-    }
-  }
-  localStorage.setItem("last_date", todayStr);
-}
-
-function saveTask(t){
-  try{
-    const key = `tasks:${keyDay()}`;
-    const arr = JSON.parse(localStorage.getItem(key) || "[]");
-    arr.push(t);
-    localStorage.setItem(key, JSON.stringify(arr));
-    // update on-screen logs immediately
-    try{ renderLogs(); }catch(e){/* ignore */}
-    return true;
-  }catch(e){
-    console.error('saveTask failed', e);
-    try{ showToast('保存に失敗しました: ' + (e && e.message || e)); }catch(_){/* ignore */}
-    return false;
-  }
-}
+// storage helpers are imported from src/storage.js
 
 // Render today's tasks as a stacked log (newest on top)
 function renderLogs(){
-  const key = `tasks:${keyDay()}`;
+  const key = `tasks:${storage.keyDay()}`;
   const raw = localStorage.getItem(key) || "[]";
   let arr = [];
   try{ arr = JSON.parse(raw) || []; }catch(e){ arr = []; }
@@ -789,41 +746,12 @@ function renderLogs(){
 function clearInputs(){ ["taskname","insight","nexttask"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = ""; }); document.getElementById("countdown").textContent = String(AUTO_SAVE_TIME); }
 
 // Update an existing task by id. Returns true on success.
-function updateTask(id, updates){
-  try{
-    const key = `tasks:${keyDay()}`;
-    const arr = JSON.parse(localStorage.getItem(key) || "[]");
-    const idx = arr.findIndex(x => x && x.id === id);
-    if(idx === -1) return false;
-    const item = arr[idx];
-    // Merge allowed fields only
-    const allowed = ['mood','effort','taskname','insight','nexttask'];
-    allowed.forEach(k => { if(typeof updates[k] !== 'undefined') item[k] = updates[k]; });
-    arr[idx] = item;
-    localStorage.setItem(key, JSON.stringify(arr));
-    try{ renderLogs(); }catch(e){}
-    return true;
-  }catch(e){ console.error('updateTask failed', e); return false; }
-}
-
-function deleteTask(id){
-  try{
-    // confirm deletion to avoid accidental removals
-    const ok = confirm('この記録を削除してもよいですか？\n操作は元に戻せません。');
-    if(!ok) return false;
-    const key = `tasks:${keyDay()}`;
-    const arr = JSON.parse(localStorage.getItem(key) || "[]");
-    const newArr = arr.filter(x => x && x.id !== id);
-    localStorage.setItem(key, JSON.stringify(newArr));
-    try{ renderLogs(); }catch(e){}
-    showToast('記録を削除しました');
-    return true;
-  }catch(e){ console.error('deleteTask failed', e); showToast('削除に失敗しました'); return false; }
-}
+// updateTask/deleteTask are provided by src/storage.js; UI-specific confirmations and
+// render calls remain in this file where appropriate.
 
 function editTask(id){
   try{
-    const key = `tasks:${keyDay()}`;
+  const key = `tasks:${storage.keyDay()}`;
     const arr = JSON.parse(localStorage.getItem(key) || "[]");
     const item = arr.find(x => x && x.id === id);
     if(!item) { showToast('編集対象が見つかりません'); return; }
@@ -840,12 +768,38 @@ function editTask(id){
 }
 
 // Expose to window for inline onclick handlers
-try{ window.editTask = editTask; window.deleteTask = deleteTask; window.updateTask = updateTask; }catch(e){}
+try{
+  window.editTask = editTask;
+  // UI-facing delete: show confirmation, call storage.deleteTask, then refresh UI
+  window.deleteTask = function(id){
+    try{
+      const ok = confirm('この記録を削除してもよいですか？\n操作は元に戻せません。');
+      if(!ok) return false;
+      const res = storage.deleteTask(id);
+      try{ renderLogs(); }catch(e){}
+      if(res) showToast('記録を削除しました');
+      return res;
+    }catch(e){ console.error('deleteTask (ui) failed', e); showToast('削除に失敗しました'); return false; }
+  };
+  // Expose raw updateTask for debugging but refresh logs after update
+  window.updateTask = function(id, updates){
+    try{
+      const res = storage.updateTask(id, updates);
+      try{ renderLogs(); }catch(e){}
+      return res;
+    }catch(e){ console.error('updateTask (ui) failed', e); return false; }
+  };
+}catch(e){}
 
 // Expose for debugging and quick manual testing
-window._bottle = { now, loadToday, saveToday, saveTask, applyLayer,
+window._bottle = {
+  now,
+  loadToday: storage.loadToday,
+  saveToday: storage.saveToday,
+  saveTask: storage.saveTask,
+  applyLayer,
   // set today's layer (absolute) and re-render
-  setLayerForDebug: (layer)=>{ try{ const k = `daily:${new Date().toISOString().slice(0,10)}`; const d = {date:new Date().toISOString().slice(0,10), layerTotal:layer, bottlesToday:Math.floor(layer/100), bottlesCum:loadCumBase()+Math.floor(layer/100)}; localStorage.setItem(k, JSON.stringify(d)); today = d; render(); renderLogs(); }catch(e){} }
+  setLayerForDebug: (layer)=>{ try{ const k = `daily:${new Date().toISOString().slice(0,10)}`; const d = {date:new Date().toISOString().slice(0,10), layerTotal:layer, bottlesToday:Math.floor(layer/100), bottlesCum:storage.loadCumBase()+Math.floor(layer/100)}; localStorage.setItem(k, JSON.stringify(d)); today = d; render(); renderLogs(); }catch(e){} }
 };
 
 // --- Auto-save configuration ---
