@@ -1001,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         // Try to fetch VAPID public key from server; if not available, prompt user
         let vapidPublicKey = null;
         try{
-          const r = await fetch('/vapidPublicKey');
+          const r = await fetch('/api/vapidPublicKey');
           if(r.ok){ vapidPublicKey = await r.text(); }
         }catch(e){ /* ignore */ }
         if(!vapidPublicKey){ vapidPublicKey = prompt('VAPID 公開鍵を入力してください（Base64 URL safe）'); }
@@ -1026,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
         let vapidPublicKey = null;
         try{
-          const r = await fetch('/vapidPublicKey');
+          const r = await fetch('/api/vapidPublicKey');
           if(r.ok){ vapidPublicKey = await r.text(); }
         }catch(e){ /* ignore */ }
         if(!vapidPublicKey){ vapidPublicKey = prompt('VAPID 公開鍵を入力してください（Base64 URL safe）'); }
