@@ -38,6 +38,7 @@ document.getElementById("startBtn").addEventListener("click", () => {
   }catch(e){/* ignore */}
   if(appTimer){ appTimer.setTarget(TARGET_SECONDS); appTimer.start(); } else { startTimerInterval(); }
   updateTargetUI();
+  updateControlButtons();
 });
 // initialize ring dasharray on load so it's visible
 (function initRing(){
@@ -127,6 +128,25 @@ function updateTargetUI(){
   const upgradeBtn = document.getElementById('upgradeBtn');
   if(upgradeBtn){ upgradeBtn.textContent = isProUser() ? 'Pro（有効）' : 'Go Pro'; upgradeBtn.disabled = !!sessionStart; }
 }
+
+// Update control buttons (Start / Pause / Reset / End) enabled state based on session
+function updateControlButtons(){
+  try{
+    const startBtn = document.getElementById('startBtn');
+    const toggleBtn = document.getElementById('toggleRunBtn');
+    const resetBtn = document.getElementById('resetSessionBtn');
+    const endBtn = document.getElementById('endBtn');
+    const hasSession = !!sessionStart;
+    // When there is an active session (running or paused), Start should be disabled
+    if(startBtn) startBtn.disabled = !!hasSession;
+    // Pause/Resume, Reset, End should be disabled when there is no session
+    if(toggleBtn) toggleBtn.disabled = !hasSession;
+    if(resetBtn) resetBtn.disabled = !hasSession;
+    if(endBtn) endBtn.disabled = !hasSession;
+    // Ensure toggle text matches running state
+    if(toggleBtn){ toggleBtn.textContent = (isRunning ? '一時停止' : '再開'); }
+  }catch(e){/* ignore UI update errors */}
+}
 const endBtnMain = document.getElementById("endBtn");
 if(endBtnMain){
   endBtnMain.addEventListener("click", ()=>{
@@ -140,6 +160,7 @@ if(endBtnMain){
     // open modal for manual save; ensure UI reflects stopped state
     openEndModal(false);
     try{ updateTargetUI(); }catch(e){}
+    try{ updateControlButtons(); }catch(e){}
   });
 }
 
@@ -268,8 +289,8 @@ function saveTaskAndClose(){
     // close modal and refresh
     try{ const dlgEl = document.getElementById("endModal"); if(dlgEl && typeof dlgEl.close === 'function'){ dlgEl.close(); } else if(dlgEl){ dlgEl.style.display = 'none'; dlgEl.classList.remove('modal-fallback'); } }catch(e){ }
     render();
-    document.getElementById("startBtn").disabled = false;
     try{ updateTargetUI(); }catch(e){}
+    try{ updateControlButtons(); }catch(e){}
     return;
   }
 
@@ -325,8 +346,8 @@ function saveTaskAndClose(){
   try{ const dlgEl = document.getElementById("endModal"); if(dlgEl && typeof dlgEl.close === 'function'){ dlgEl.close(); } else if(dlgEl){ dlgEl.style.display = 'none'; dlgEl.classList.remove('modal-fallback'); } }catch(e){ console.warn('endModal close failed', e); }
   clearInputs();
   render();
-  document.getElementById("startBtn").disabled = false;
   try{ updateTargetUI(); }catch(e){}
+  try{ updateControlButtons(); }catch(e){}
 }
 
 // Confirm and save: if combined comments exceed MAX_COMBINED, show modal warning
@@ -528,6 +549,7 @@ if(toggleBtn){
       isRunning = false;
       toggleBtn.textContent = "再開";
       updateTargetUI();
+      updateControlButtons();
     } else {
       // resume
       if(appTimer){
@@ -540,6 +562,7 @@ if(toggleBtn){
       isRunning = true;
       toggleBtn.textContent = "一時停止";
       updateTargetUI();
+      updateControlButtons();
     }
   });
 }
@@ -984,6 +1007,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }catch(e){/* ignore SW update wiring errors */}
   // ensure target UI reflects current state
   updateTargetUI();
+  try{ updateControlButtons(); }catch(e){}
 
   // Reset session button (main controls) with confirmation
   const resetSessionBtn = document.getElementById('resetSessionBtn');
@@ -1032,9 +1056,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const timerEl = document.getElementById('timerDisplay'); if(timerEl) timerEl.textContent = '00:00';
     updateCountdownUI(TARGET_SECONDS, 0);
     hideOvertimeAlert();
-    const startBtn = document.getElementById('startBtn'); if(startBtn) startBtn.disabled = false;
     hideResetConfirm();
     try{ updateTargetUI(); }catch(e){}
+    try{ updateControlButtons(); }catch(e){}
   }
   if(resetYes){ resetYes.addEventListener('click', ()=>{ performReset(); }); }
   if(resetNo){ resetNo.addEventListener('click', ()=>{ hideResetConfirm(); }); }
