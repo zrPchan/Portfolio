@@ -1,5 +1,6 @@
 // Minimal Sand Study app (ESM)
 import * as storage from './src/storage.js';
+import { createTimer } from './src/timer.js';
 const UNIT_SEC = 37.5;
 const BOTTLE_CAP = 100;
 const AUTO_SAVE_TIME = 30; // seconds
@@ -8,7 +9,8 @@ let sessionStart = null; // epoch seconds or null
 let today = storage.loadToday();
 let countdownId = null;
 let countdownRemaining = AUTO_SAVE_TIME;
-let timerIntervalId = null; // for elapsed display
+let timerIntervalId = null; // legacy; kept for compatibility while migrating
+let appTimer = null; // timer abstraction (created after updateTimerDisplay is defined)
 let isRunning = false;
 let elapsedStopped = 0; // seconds when paused
 let TARGET_MINUTES = 5; // default target (minutes)
@@ -34,7 +36,7 @@ document.getElementById("startBtn").addEventListener("click", () => {
       Notification.requestPermission().then(()=>{/* noop */});
     }
   }catch(e){/* ignore */}
-  startTimerInterval();
+  if(appTimer){ appTimer.setTarget(TARGET_SECONDS); appTimer.start(); } else { startTimerInterval(); }
   updateTargetUI();
 });
 // initialize ring dasharray on load so it's visible
@@ -90,8 +92,9 @@ function showUpgradePrompt(){
 function setTargetMinutes(n){
   n = Math.max(1, Math.floor(n) || 1);
   // Prevent changing target while timer is actively running to avoid confusing behavior
-  if(isRunning){
-    try{ showToast('タイマー実行中は目標時間を変更できません'); }catch(e){}
+  // Prevent changing target while a session exists (running or paused)
+  if(sessionStart){
+    try{ showToast('タイマー実行中または一時停止中は目標時間を変更できません'); }catch(e){}
     // reflect current value back into UI
     updateTargetUI();
     return;
@@ -108,6 +111,7 @@ function setTargetMinutes(n){
   updateTargetUI();
   // ensure countdown visual reflects new target
   updateCountdownUI(TARGET_SECONDS, 0);
+  if(appTimer){ appTimer.setTarget(TARGET_SECONDS); }
 }
 
 function updateTargetUI(){
@@ -116,20 +120,23 @@ function updateTargetUI(){
   if(sub) sub.textContent = `/ ${String(TARGET_MINUTES)}分`;
   const inp = document.getElementById('targetMinutesInput');
   if(inp) inp.value = String(TARGET_MINUTES);
-  // disable input while timer is running to avoid changing behavior mid-session
-  try{ if(inp) inp.disabled = !!isRunning; }catch(e){}
+  // disable input while a session exists (running or paused) to avoid changing behavior mid-session
+  try{ if(inp) inp.disabled = !!sessionStart; }catch(e){}
   const badge = document.getElementById('proBadge');
   if(badge) badge.textContent = isProUser() ? 'Pro' : 'Free';
   const upgradeBtn = document.getElementById('upgradeBtn');
-  if(upgradeBtn){ upgradeBtn.textContent = isProUser() ? 'Pro（有効）' : 'Go Pro'; upgradeBtn.disabled = !!isRunning; }
+  if(upgradeBtn){ upgradeBtn.textContent = isProUser() ? 'Pro（有効）' : 'Go Pro'; upgradeBtn.disabled = !!sessionStart; }
 }
 const endBtnMain = document.getElementById("endBtn");
 if(endBtnMain){
   endBtnMain.addEventListener("click", ()=>{
     // Treat pressing End as completing the current run: stop timer and open end modal
-    try{ elapsedStopped = sessionStart ? Math.min(now() - sessionStart, TARGET_SECONDS) : elapsedStopped; }catch(e){}
+    try{
+      if(appTimer){ elapsedStopped = Math.min(appTimer.getElapsed(), TARGET_SECONDS); }
+      else { elapsedStopped = sessionStart ? Math.min(now() - sessionStart, TARGET_SECONDS) : elapsedStopped; }
+    }catch(e){}
     isRunning = false;
-    stopTimerInterval();
+    if(appTimer){ appTimer.pause(); } else { stopTimerInterval(); }
     // open modal for manual save; ensure UI reflects stopped state
     openEndModal(false);
     try{ updateTargetUI(); }catch(e){}
@@ -267,15 +274,15 @@ function saveTaskAndClose(){
   }
 
   const end = now();
-  const elapsed = sessionStart ? (end - sessionStart) : 0;
+  const elapsed = appTimer ? appTimer.getElapsed() : (sessionStart ? (end - sessionStart) : 0);
   const layer = elapsed < 60 ? 0 : Math.floor(elapsed / UNIT_SEC);
   // Safely generate an id even on older browsers
   const genId = (() => { try{ return (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : null; }catch(e){ return null; } })();
   const t = {
     id: genId || ('id-' + Date.now() + '-' + Math.floor(Math.random()*100000)),
-    start: sessionStart || end,
-    end,
-    elapsedSec: elapsed,
+  start: (end - elapsed) || end,
+  end,
+  elapsedSec: elapsed,
     layer,
     subject: "default",
     weekday: new Date().getDay(),
@@ -303,9 +310,9 @@ function saveTaskAndClose(){
       console.error('saveTask returned false');
       return;
     }
-    applyLayer(layer);
-    sessionStart = null;
-    stopTimerInterval();
+  applyLayer(layer);
+  sessionStart = null;
+  if(appTimer) { appTimer.pause(); } else { stopTimerInterval(); }
     try{ showToast('保存しました'); }catch(e){}
   }catch(e){
     console.error('saveTaskAndClose failed', e);
@@ -382,6 +389,17 @@ function formatElapsed(sec){
 }
 
 function startTimerInterval(){
+  // Legacy wrapper: start the appTimer if available, otherwise start the old interval
+  if(appTimer){
+    appTimer.setTarget(TARGET_SECONDS);
+    // ensure sessionStart is in sync
+    try{ const cur = appTimer.getElapsed(); sessionStart = now() - cur; }catch(e){}
+    appTimer.start();
+    // update immediately
+    updateTimerDisplay();
+    updateCountdown();
+    return;
+  }
   stopTimerInterval();
   // immediately update
   updateTimerDisplay();
@@ -392,7 +410,10 @@ function startTimerInterval(){
 }
 
 function stopTimerInterval(){
+  // Legacy: stop interval
   if(timerIntervalId){ clearInterval(timerIntervalId); timerIntervalId = null; }
+  // If appTimer exists, stop it
+  if(appTimer){ appTimer.stop(); }
   // reset display
   const el = document.getElementById("timerDisplay"); if(el) el.textContent = "00:00";
   // reflect UI changes when timer stops
@@ -401,32 +422,25 @@ function stopTimerInterval(){
 
 // Countdown specific helpers
 function updateCountdown(){
-  // compute elapsed depending on running/paused
+  // Prefer using appTimer when available
   let elapsed = 0;
-  if(sessionStart){
-    elapsed = isRunning ? (now() - sessionStart) : elapsedStopped;
+  if(appTimer){
+    elapsed = appTimer.getElapsed();
   } else {
-    elapsed = elapsedStopped;
+    if(sessionStart){ elapsed = isRunning ? (now() - sessionStart) : elapsedStopped; } else { elapsed = elapsedStopped; }
   }
-  // Cap elapsed at the target: once reached, stop counting further
   const cappedElapsed = Math.min(elapsed, TARGET_SECONDS);
   const remaining = Math.max(0, TARGET_SECONDS - cappedElapsed);
   updateCountdownUI(remaining, cappedElapsed);
-
-  if(cappedElapsed >= TARGET_SECONDS && isRunning){
-    // reached target: freeze the elapsed display and stop running
-    elapsedStopped = TARGET_SECONDS;
-    isRunning = false;
-    // open modal to save (auto)
-    // play sound and send notification
-    try{ notifyTargetReached(); }catch(e){/* ignore */}
-    openEndModal(true);
-  }
-  // show overtime alert once when elapsed strictly exceeds target (should not happen now because we cap),
-  // but keep the original behavior in case other code sets overtime state.
-  if(!overtimeAlerted && elapsed > TARGET_SECONDS){
-    showOvertimeAlert();
-    try{ notifyTargetReached(); }catch(e){}
+  // Note: openEndModal on target and overtime are handled by timer callbacks when appTimer is used.
+  if(!appTimer){
+    if(cappedElapsed >= TARGET_SECONDS && isRunning){
+      elapsedStopped = TARGET_SECONDS;
+      isRunning = false;
+      try{ notifyTargetReached(); }catch(e){}
+      openEndModal(true);
+    }
+    if(!overtimeAlerted && elapsed > TARGET_SECONDS){ showOvertimeAlert(); try{ notifyTargetReached(); }catch(e){} }
   }
 }
 
@@ -485,6 +499,24 @@ function updateCountdownUI(remainingSec, elapsedSec){
   if(ring) ring.style.strokeDashoffset = String(offset);
 }
 
+// Initialize timer abstraction (if not already) to handle ticking and target events.
+if(!appTimer){
+  appTimer = createTimer({
+    targetSeconds: TARGET_SECONDS,
+    onTick: (elapsed, remaining) => {
+      try{ updateTimerDisplay(); }catch(e){}
+      try{ updateCountdownUI(remaining, Math.min(elapsed, TARGET_SECONDS)); }catch(e){}
+    },
+    onTarget: () => {
+      try{ notifyTargetReached(); }catch(e){}
+      try{ openEndModal(true); }catch(e){}
+    },
+    onOvertime: (elapsed) => {
+      if(!overtimeAlerted){ try{ showOvertimeAlert(); }catch(e){} try{ notifyTargetReached(); }catch(e){} }
+    }
+  });
+}
+
 // Toggle pause/resume button handling
 const toggleBtn = document.getElementById("toggleRunBtn");
 if(toggleBtn){
@@ -492,13 +524,19 @@ if(toggleBtn){
     if(!sessionStart){ return; }
     if(isRunning){
       // pause
-      elapsedStopped = now() - sessionStart;
+      if(appTimer){ appTimer.pause(); elapsedStopped = appTimer.getElapsed(); } else { elapsedStopped = now() - sessionStart; }
       isRunning = false;
       toggleBtn.textContent = "再開";
       updateTargetUI();
     } else {
       // resume
-      sessionStart = now() - (elapsedStopped || 0);
+      if(appTimer){
+        // sessionStart sync
+        try{ const cur = appTimer.getElapsed(); sessionStart = now() - cur; }catch(e){}
+        appTimer.start();
+      } else {
+        sessionStart = now() - (elapsedStopped || 0);
+      }
       isRunning = true;
       toggleBtn.textContent = "一時停止";
       updateTargetUI();
@@ -520,17 +558,18 @@ if(completeBtn){
 function updateTimerDisplay(){
   const el = document.getElementById("timerDisplay");
   if(!el) return;
-  // If there's no session, show 00:00
-  if(!sessionStart && !isRunning){ el.textContent = "00:00"; return; }
-  // If paused, show the stopped elapsed value
-  if(!isRunning){
-    // ensure we don't show more than TARGET_SECONDS
-    el.textContent = formatElapsed(Math.min(elapsedStopped, TARGET_SECONDS));
+  // Prefer timer abstraction if available
+  if(appTimer){
+    const running = appTimer.isRunning();
+    const elapsed = appTimer.getElapsed();
+    if(!running && !elapsed){ el.textContent = "00:00"; return; }
+    el.textContent = formatElapsed(Math.min(elapsed, TARGET_SECONDS));
     return;
   }
-  // running: compute current elapsed
+  // Fallback to legacy sessionStart/isRunning
+  if(!sessionStart && !isRunning){ el.textContent = "00:00"; return; }
+  if(!isRunning){ el.textContent = formatElapsed(Math.min(elapsedStopped, TARGET_SECONDS)); return; }
   const elapsed = now() - sessionStart;
-  // while running, don't display beyond TARGET_SECONDS
   el.textContent = formatElapsed(Math.min(elapsed, TARGET_SECONDS));
 }
 
