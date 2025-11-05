@@ -24,6 +24,10 @@
   <link rel="icon" href="icons/icon-192.png" sizes="192x192">
   <link rel="apple-touch-icon" href="apple-touch-icon.svg" type="image/svg+xml">
   <title>Sand Study</title>
+  <!-- Cute rounded display font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -91,7 +95,7 @@
       <div id="proBadge">Free</div>
     </div>
     <!-- Auto-save settings: allow user to choose interval or turn off. -->
-    <div id="autoSaveControls" style="text-align:center;margin-top:8px;">
+  <div id="autoSaveControls" class="text-center mt-8">
       <label for="autoSaveSelect">自動保存:</label>
       <select id="autoSaveSelect">
         <option value="0">オフ</option>
@@ -101,7 +105,7 @@
       </select>
     </div>
     <!-- Persistent Push controls: allow registering/unregistering for Push even when debug panel is hidden -->
-    <div id="pushControls" style="margin-top:8px; text-align:center;">
+  <div id="pushControls" class="text-center mt-8">
       <button id="pushSubscribeBtnMain" type="button">通知 登録</button>
       <button id="pushUnsubscribeBtnMain" type="button">通知 解除</button>
     </div>
@@ -115,7 +119,7 @@
     </div>
   </section>
 
-  <div style="text-align:center;margin-top:10px">
+  <div class="text-center mt-10">
       <a href="history.html">履歴と分析ページへ →</a>
   </div>
 
@@ -149,14 +153,14 @@
       <button id="iosHelpBtn" type="button">iOS 手順</button>
     </div>
     <div class="debug-row">
-      <div>Push 状態: <span id="pushStatus">未確認</span></div>
-      <div>VAPID 公開鍵: <code id="vapidKey" style="word-break:break-all;max-width:420px;display:inline-block"></code></div>
-      <div>登録エンドポイント: <code id="pushEndpoint" style="word-break:break-all;max-width:420px;display:inline-block"></code></div>
+  <div>Push 状態: <span id="pushStatus">未確認</span></div>
+  <div>VAPID 公開鍵: <code id="vapidKey" class="code-inline"></code></div>
+  <div>登録エンドポイント: <code id="pushEndpoint" class="code-inline"></code></div>
     </div>
   </section>
 
   <dialog id="iosHelpDialog">
-    <form method="dialog" style="max-width:480px;padding:16px">
+    <form method="dialog" class="form-dialog">
       <h3>iOS で Push を有効にする手順</h3>
       <ol>
         <li>Safari でこのページを開きます。<em>（https 経由であることを確認）</em></li>
@@ -166,7 +170,7 @@
         <li>アプリから「Push 登録」をタップして許可を与えてください。</li>
       </ol>
       <p>補足: iOS 16.4 以上で PWA の Push がサポートされています。プライベートブラウズモードや古い iOS では動作しない可能性があります。</p>
-      <div style="text-align:right;margin-top:8px"><button id="iosHelpClose" type="button">閉じる</button></div>
+  <div class="actions-right"><button id="iosHelpClose" type="button">閉じる</button></div>
     </form>
   </dialog>
 
