@@ -1,5 +1,5 @@
 const webpush = require('web-push');
-const { Deta } = require('deta');
+const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
@@ -17,16 +17,15 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   console.warn('VAPID keys not set in env; push sending will fail until configured.');
 }
 
-let db = null;
-if (process.env.DETA_PROJECT_KEY) {
+let supabase = null;
+if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
   try {
-    const deta = Deta(process.env.DETA_PROJECT_KEY);
-    db = deta.Base('subscriptions');
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
   } catch (err) {
-    console.error('Failed to initialize Deta:', err && err.message);
+    console.error('Failed to initialize Supabase client:', err && err.message);
   }
 } else {
-  console.warn('DETA_PROJECT_KEY not provided; subscription persistence disabled.');
+  console.warn('Supabase not configured (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing); subscription persistence disabled.');
 }
 
 function idFromEndpoint(endpoint) {
@@ -59,7 +58,7 @@ function requireAdminAuth(req, res){
 
 module.exports = {
   webpush,
-  db,
+  supabase,
   idFromEndpoint,
   VAPID_PUBLIC_KEY,
   VAPID_PRIVATE_KEY,

@@ -1171,9 +1171,9 @@ if('serviceWorker' in navigator){
                   // showing a completion dialog for a task that never started.
                   try{
                     if(sessionStart || isRunning || (typeof elapsedStopped === 'number' && elapsedStopped > 0)){
-                      // Do NOT auto-save immediately on notification. Always open the end modal
-                      // in auto mode so the configured countdown is respected and user can edit if needed.
-                      try{ openEndModal(true); }catch(e){/* ignore */}
+                      // Open the end modal but DO NOT start the auto-save countdown.
+                      // This prevents an immediate save when the user taps a notification.
+                      try{ openEndModal(false); }catch(e){/* ignore */}
                     } else {
                       // No session: just focus the app and show a helpful toast instead
                       try{ window.focus && window.focus(); }catch(_){/* ignore */}

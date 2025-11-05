@@ -1,4 +1,4 @@
-const { db, webpush, requireAdminAuth } = require('./_lib');
+const { supabase, webpush, requireAdminAuth } = require('./_lib');
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
@@ -23,24 +23,24 @@ module.exports = async (req, res) => {
 
     if (id || endpoint) {
       const key = id || (endpoint && crypto.createHash('sha256').update(String(endpoint)).digest('hex'));
-      const item = await db.get(key);
-      if (!item || !item.subscription) return res.status(404).json({ error: 'subscription not found' });
-      const result = await sendToSub(item.subscription);
+      const { data, error } = await supabase.from('subscriptions').select('subscription').eq('id', key).single();
+      if (error || !data) return res.status(404).json({ error: 'subscription not found' });
+      const result = await sendToSub(data.subscription);
       return res.status(200).json({ results: [result] });
     }
 
     // send to all
     const results = [];
-    let iter = await db.fetch();
-    while (iter) {
-      for (const it of iter.items || []) {
-        if (it.subscription) {
-          const r = await sendToSub(it.subscription);
-          results.push({ id: it.id, ...r });
-        }
+    const { data, error } = await supabase.from('subscriptions').select('*');
+    if (error) {
+      console.error('supabase select error:', error);
+      return res.status(500).json({ error: String(error) });
+    }
+    for (const it of data || []) {
+      if (it.subscription) {
+        const r = await sendToSub(it.subscription);
+        results.push({ id: it.id, ...r });
       }
-      if (!iter.last) break;
-      iter = await db.fetch({ last: iter.last });
     }
     return res.status(200).json({ results });
   } catch (err) {
