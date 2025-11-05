@@ -795,6 +795,9 @@ function updateTask(id, updates){
 
 function deleteTask(id){
   try{
+    // confirm deletion to avoid accidental removals
+    const ok = confirm('この記録を削除してもよいですか？\n操作は元に戻せません。');
+    if(!ok) return false;
     const key = `tasks:${keyDay()}`;
     const arr = JSON.parse(localStorage.getItem(key) || "[]");
     const newArr = arr.filter(x => x && x.id !== id);
