@@ -1,8 +1,11 @@
-const { db, webpush } = require('./_lib');
+const { db, webpush, requireAdminAuth } = require('./_lib');
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  // Require admin auth for send endpoint
+  const ok = requireAdminAuth(req, res);
+  if(!ok) return; // response already sent
   try {
     const { id, endpoint, payload } = req.body || {};
     if (!db) return res.status(500).json({ error: 'Deta not configured (DETA_PROJECT_KEY missing)' });

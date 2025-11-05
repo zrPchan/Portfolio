@@ -8,6 +8,7 @@ Required environment variables (set in Vercel dashboard > Project Settings > Env
 - VAPID_PUBLIC_KEY : your Web Push VAPID public key
 - VAPID_PRIVATE_KEY : your Web Push VAPID private key
 - VAPID_SUBJECT : (optional) mailto: or URL used in VAPID claims
+- ADMIN_API_TOKEN : secret token to protect admin endpoints (send / list-subscriptions). Provide a strong random string and pass it as `Authorization: Bearer <token>` or `x-api-key: <token>` when calling admin endpoints.
 
 Quick steps:
 
