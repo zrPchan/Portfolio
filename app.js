@@ -136,8 +136,10 @@ if(endBtnMain){
 }
 
 function openEndModal(isAuto = false){
-  // entering edit mode should be explicit; reset any previous edit id when opening fresh modal
-  editingTaskId = null;
+  // entering edit mode should be explicit; do NOT overwrite an editingTaskId
+  // if the caller set it (edit flow sets editingTaskId before calling this).
+  // Previously this function unconditionally cleared editingTaskId which prevented
+  // edit flows from working and caused the cancel button to behave like "タスク続行".
   if(!sessionStart){ sessionStart = now(); }
   // Ensure any embedded overlays are hidden so they don't intercept touches/clicks
   try{
@@ -202,16 +204,27 @@ function openEndModal(isAuto = false){
       cancelBtn.style.display = 'none';
       cancelBtn.onclick = null;
     } else {
-      // show 'タスク続行' which closes modal and resumes
-      cancelBtn.style.display = '';
-      cancelBtn.textContent = 'タスク続行';
-      cancelBtn.onclick = (e) => { e.preventDefault();
-        // close modal and stop countdown, keep timer running
-        closeModal();
-        // ensure timer continues
-        isRunning = true;
-        startTimerInterval();
-      };
+      // If we're editing an existing log entry, show a simple 'キャンセル' that
+      // only closes the modal (do not resume the timer or change running state).
+      if(editingTaskId){
+        cancelBtn.style.display = '';
+        cancelBtn.textContent = 'キャンセル';
+        cancelBtn.onclick = (e) => { e.preventDefault();
+          // just close modal; keep timer stopped/unchanged
+          closeModal();
+        };
+      } else {
+        // show 'タスク続行' which closes modal and resumes
+        cancelBtn.style.display = '';
+        cancelBtn.textContent = 'タスク続行';
+        cancelBtn.onclick = (e) => { e.preventDefault();
+          // close modal and stop countdown, keep timer running
+          closeModal();
+          // ensure timer continues
+          isRunning = true;
+          startTimerInterval();
+        };
+      }
     }
   }
 }
