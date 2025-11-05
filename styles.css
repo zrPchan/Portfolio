@@ -1,0 +1,121 @@
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial; margin:12px; color:#111}
+.stats .big{font-size:28px;font-weight:600}
+.stats .mid{font-size:18px;margin-top:4px}
+.stats .small{font-size:14px;color:#555}
+.bottle{position:relative;width:160px;height:260px;margin:16px auto;border:2px solid #222;border-radius:32px 32px 24px 24px;overflow:hidden;background:white}
+.rim{position:absolute;inset:0;border:1px solid rgba(0,0,0,.08);border-radius:32px 32px 24px 24px;pointer-events:none}
+.sand{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:hidden} /* container for sand layers */
+.sand-layer{position:absolute;left:0;width:100%;box-sizing:border-box;border-top:1px solid rgba(0,0,0,0.03)}
+.sand-layer.partial{border-top:1px solid rgba(0,0,0,0.06)}
+.controls{display:flex;gap:12px;justify-content:center;margin-top:8px}
+button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff}
+dialog{border:none;border-radius:8px;padding:12px}
+/* Ensure dialog appears above embedded overlays (reset overlay z-index:80) */
+dialog[open], dialog.modal-fallback{position:fixed;z-index:1000;left:50%;top:50%;transform:translate(-50%,-50%);max-width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.35);pointer-events:auto}
+label{display:block;margin:6px 0}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.countdown{position:absolute;top:8px;right:12px;font-size:12px;color:#666}
+.stat{display:flex;align-items:center;gap:8px}
+main{max-width:420px;margin:0 auto;padding:8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* Timer display */
+.timer{text-align:center;margin-top:6px}
+.timer > div:first-child{font-size:18px;font-weight:600}
+#timerDisplay{font-size:20px;letter-spacing:1px}
+
+/* Countdown circular UI */
+.countdown-ui{text-align:center;margin-top:12px}
+.circle-wrap{position:relative;width:160px;height:160px;margin:0 auto}
+.countdown-ring{transform:rotate(-90deg);transform-box:fill-box;transform-origin:center}
+.ring-bg{stroke:rgba(0,0,0,0.08)}
+.ring-fg{stroke:#b89258;transition:stroke-dashoffset 0.5s linear}
+.circle-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.countdown-text{font-size:22px;font-weight:700;font-family:monospace}
+.countdown-sub{font-size:12px;color:#666}
+.countdown-controls{margin-top:8px;display:flex;gap:8px;justify-content:center}
+.countdown-controls button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff}
+
+/* disabled button appearance */
+button:disabled{opacity:0.5;cursor:not-allowed}
+
+.log-list-outer{border-top:1px solid rgba(0,0,0,0.06);padding:8px}
+.log-list{max-height:220px;overflow:auto;padding:0;display:flex;flex-direction:column;gap:8px;margin:0 auto;width:100%;box-sizing:border-box}
+.log-item{background:#fff;border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 1px 0 rgba(0,0,0,0.02);font-size:13px}
+.log-item{overflow-wrap:anywhere}
+.log-meta{display:flex;gap:8px;color:#666;font-size:12px;margin-bottom:6px}
+.log-layer{font-weight:700;color:#b89258}
+.log-comment{color:#333}
+.log-empty{color:#888;text-align:center;padding:12px}
+
+.log-empty-text{color:#888}
+
+/* Debug panel */
+#debugPanel{padding:8px;max-width:420px;margin:12px auto;border-top:1px solid rgba(0,0,0,0.04)}
+#debugPanel .debug-header{display:flex;justify-content:space-between;align-items:center}
+#debugPanel .debug-controls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+#debugPanel .debug-controls button{padding:6px 8px;border-radius:6px;border:1px solid #bbb;background:#fff}
+#debugPanel .debug-row{margin-top:8px;display:flex;gap:8px;align-items:center}
+#debugPanel input[type=number]{flex:1;padding:6px;border:1px solid #ccc;border-radius:6px}
+#enableSEBtn{background:#f3f7ff;border-color:#9fb2ff}
+#debugPanel .hint{font-size:12px;color:#666}
+
+/* Overtime alert banner */
+#overtimeAlert{display:none;padding:8px;background:#fff4e5;border:1px solid #f0c080;color:#7a4b11;text-align:center;border-radius:6px;margin-bottom:8px;max-width:420px;margin-left:auto;margin-right:auto}
+#overtimeAlert button{margin-left:12px;padding:4px 8px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);background:#fff}
+
+/* Desktop: restrict log list width to ~1/3 so scrollbar sits next to cards */
+@media (min-width: 900px){
+  .log-list{max-width:33%;}
+}
+
+/* Truncate warning inside end modal */
+.truncate-warning{display:none;margin-top:8px;padding:8px;border-radius:6px;background:#fff7e6;border:1px solid #f0c080;color:#7a4b11}
+.truncate-warning .actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.truncate-warning button{padding:6px 8px}
+
+/* character counter next to inputs in modal */
+.char-counter{display:inline-block;margin-left:8px;font-size:12px;color:#666;background:#f6f6f6;padding:2px 6px;border-radius:6px;border:1px solid rgba(0,0,0,0.04)}
+.char-counter.small{font-size:11px;color:#999;padding:2px 4px}
+
+/* Embedded popup overlay for reset confirmation (not native dialog) */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;z-index:80;display:none}
+.overlay[aria-hidden="false"]{display:flex}
+.popup-box{background:white;border-radius:10px;padding:12px;width:280px;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.2);border:1px solid rgba(0,0,0,0.06);transform-origin:center center;transition:transform 160ms ease,opacity 120ms ease}
+.overlay[style*="display:block"] .popup-box, .overlay[style*="display:flex"] .popup-box{transform:scale(1);opacity:1}
+.popup-box[hidden]{transform:scale(0.96);opacity:0}
+.popup-title{font-weight:700;font-size:16px;color:#111;text-align:center}
+.popup-body{text-align:center}
+.popup-actions{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.popup-actions button:first-child{margin-right:8px}
+
+/* Target time input and buttons */
+/* Target time row: center the label, input, button and badge */
+.target-row{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:8px}
+.target-row label{margin-right:4px}
+#targetMinutesInput{width:72px;padding:6px;border:1px solid #ccc;border-radius:6px}
+#upgradeBtn{padding:6px 10px;border-radius:6px}
+#proBadge{margin-left:8px;font-weight:600;color:#666}
+
+/* Logs header */
+#logs h4{text-align:center;margin-top:8px}
+
+/* Truncate warning actions (used in modal) */
+.truncate-warning .actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.btn-primary{background:#b89258;color:white;border-color:#9f7440}
+.btn-primary:hover{filter:brightness(0.98)}
+
+/* Mobile debug toast for devices without console access (iPhone) */
+#mobileToast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;padding:8px 12px;border-radius:8px;font-size:14px;z-index:3000;display:none;max-width:90%;text-align:center}
+.toast-show{display:block;opacity:1;transition:opacity 200ms ease}
+.toast-hide{opacity:0;transition:opacity 200ms ease}
+
+/* Update banner shown when a new Service Worker / app version is available */
+#updateBanner{position:fixed;left:50%;top:12px;transform:translateX(-50%);background:#0b63ff;color:white;padding:10px 14px;border-radius:8px;z-index:4000;display:none;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(11,99,255,0.14);max-width:92%}
+#updateBanner .msg{flex:1;font-size:15px}
+#updateBanner .actions{display:flex;gap:8px}
+#updateBanner button{padding:6px 10px;border-radius:6px;border:none;background:rgba(255,255,255,0.12);color:white}
+#updateBanner button.primary{background:white;color:#0b63ff}
+
+/* Visual flash for save button when tapped to confirm interaction */
+.save-flash{box-shadow:0 0 0 3px rgba(184,146,88,0.45);}
