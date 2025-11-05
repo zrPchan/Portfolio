@@ -143,7 +143,7 @@ if(endBtnMain){
   });
 }
 
-function openEndModal(isAuto = false){
+function openEndModal(isAuto = false, isEdit = false){
   // entering edit mode should be explicit; do NOT overwrite an editingTaskId
   // if the caller set it (edit flow sets editingTaskId before calling this).
   // Previously this function unconditionally cleared editingTaskId which prevented
@@ -212,9 +212,10 @@ function openEndModal(isAuto = false){
       cancelBtn.style.display = 'none';
       cancelBtn.onclick = null;
     } else {
-      // If we're editing an existing log entry, show a simple 'キャンセル' that
-      // only closes the modal (do not resume the timer or change running state).
-      if(editingTaskId){
+      // If we're editing an existing log entry (explicit flag or editingTaskId set), show a simple 'キャンセル'
+      // that only closes the modal (do not resume the timer or change running state).
+      const inEdit = !!isEdit || !!editingTaskId;
+      if(inEdit){
         cancelBtn.style.display = '';
         cancelBtn.textContent = 'キャンセル';
         cancelBtn.onclick = (e) => { e.preventDefault();
@@ -800,9 +801,9 @@ function editTask(id){
     document.getElementById('nexttask').value = item.nexttask || '';
     try{ document.getElementById('mood').value = String(item.mood || 0); }catch(e){}
     try{ document.getElementById('effort').value = String(item.effort || 0); }catch(e){}
-    // set editing flag and open modal
+    // set editing flag and open modal (pass explicit isEdit=true)
     editingTaskId = id;
-    openEndModal(false);
+    openEndModal(false, true);
   }catch(e){ console.error('editTask failed', e); showToast('編集開始に失敗しました'); }
 }
 
