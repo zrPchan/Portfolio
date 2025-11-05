@@ -39,6 +39,8 @@ document.getElementById("startBtn").addEventListener("click", () => {
   if(appTimer){ appTimer.setTarget(TARGET_SECONDS); appTimer.start(); } else { startTimerInterval(); }
   updateTargetUI();
   updateControlButtons();
+  // Attempt push registration only if not currently registered. Do not block start flow on errors.
+  try{ attemptPushRegisterIfNeeded(); }catch(e){ /* ignore */ }
 });
 // initialize ring dasharray on load so it's visible
 (function initRing(){
@@ -716,6 +718,30 @@ async function subscribeForPush(vapidPublicKey){
   localStorage.setItem('pushSubscription', JSON.stringify(sub));
   showToast('Push通知を登録しました');
   try{ if(DEV) console.log('push subscription', sub); }catch(e){}
+}
+
+// Attempt to register for push if not already subscribed.
+// This is safe to call from the Start button: it will do nothing if the user
+// already has a subscription, and it will not block the main timer flow.
+async function attemptPushRegisterIfNeeded(){
+  try{
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const reg = await navigator.serviceWorker.ready;
+    if(!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if(sub) return; // already subscribed
+
+    // Try fetching public key from server endpoints used elsewhere in app
+    let key = null;
+    try{ const r = await fetch('/api/vapidPublicKey'); if(r.ok) key = await r.text(); }catch(_){ }
+    if(!key){ try{ const r2 = await fetch('/vapidPublicKey'); if(r2.ok) key = await r2.text(); }catch(_){ } }
+    if(!key){ /* no key available; ask user via prompt as fallback */
+      try{ key = prompt('Push 用 VAPID 公開鍵を入力してください（省略すると登録は行いません）'); }catch(e){}
+    }
+    if(!key) return; // user cancelled or no key
+
+    try{ await subscribeForPush(key.trim()); }catch(e){ console.warn('attemptPushRegisterIfNeeded failed', e); }
+  }catch(e){ console.warn('attemptPushRegisterIfNeeded unexpected error', e); }
 }
 
 async function unsubscribePush(){
