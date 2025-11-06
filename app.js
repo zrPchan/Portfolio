@@ -651,7 +651,7 @@ function render(){
     const darkRgb = parseColorToRgb(colorDark);
     const lightRgb = parseColorToRgb(colorLight);
 
-      // create full layers with updated background-color property
+    // create full layers
     for(let i=0;i<fullLayers;i++){
       // position from bottom: i*10%
       const bottomPct = i * 10;
@@ -660,7 +660,7 @@ function render(){
       const g = lerp(darkRgb[1], lightRgb[1], t);
       const b = lerp(darkRgb[2], lightRgb[2], t);
       const color = rgbToHex(r,g,b);
-        layers.push(`<div class=\"sand-layer\" style=\"bottom:${bottomPct}%;height:10%;background-color:${color};\"></div>`);
+      layers.push(`<div class=\"sand-layer\" style=\"bottom:${bottomPct}%;height:10%;background:${color};\"></div>`);
     }
     // partial top layer
     if(remainderLayer > 0){
@@ -672,7 +672,7 @@ function render(){
       const g = lerp(darkRgb[1], lightRgb[1], t);
       const b = lerp(darkRgb[2], lightRgb[2], t);
       const color = rgbToHex(r,g,b);
-        layers.push(`<div class=\"sand-layer partial\" style=\"bottom:${bottomPct}%;height:${heightPct}%;background-color:${color};\"></div>`);
+      layers.push(`<div class=\"sand-layer partial\" style=\"bottom:${bottomPct}%;height:${heightPct}%;background:${color};\"></div>`);
     }
     sandEl.innerHTML = layers.join('');
   }
