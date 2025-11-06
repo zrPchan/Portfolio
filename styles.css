@@ -229,3 +229,40 @@ button:disabled{opacity:0.5;cursor:not-allowed}
   /* ensure dialogs and overlays fit */
   dialog, .popup-box{max-width:94%}
 }
+
+/* Theme picker styles */
+.theme-popup{background:var(--card);border-radius:12px;padding:12px;width:520px;max-width:92%;box-shadow:0 18px 48px rgba(34,20,35,0.18)}
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:6px}
+.theme-swatch{border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.06);background:linear-gradient(180deg,#fff,#fffef7);display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}
+.theme-swatch:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(34,20,35,0.08)}
+.swatch-sample{width:48px;height:36px;border-radius:6px;display:block;border:1px solid rgba(0,0,0,0.04)}
+.swatch-label{font-size:12px;color:var(--muted);text-align:center}
+
+/* Theme variable classes: each theme sets the core CSS variables used by the app */
+.theme-1{ --bg-1:#fff7fb; --bg-2:#fffcf5; --card:#fffefc; --muted:#7b6b7b; --accent:#f6a4d9; --accent-2:#ffd3a5; --accent-3:#b89258 }
+.theme-2{ --bg-1:#f7fff6; --bg-2:#f0fff0; --card:#ffffff; --muted:#5b6b5b; --accent:#88e0a7; --accent-2:#baf6d0; --accent-3:#4aa86b }
+.theme-3{ --bg-1:#f0fbff; --bg-2:#eef9ff; --card:#fdfefe; --muted:#3c5969; --accent:#72d0ff; --accent-2:#c9f2ff; --accent-3:#2b8fb3 }
+.theme-4{ --bg-1:#fff6e9; --bg-2:#fff3e1; --card:#fffdf9; --muted:#6b5a48; --accent:#ffd08a; --accent-2:#ffe9c9; --accent-3:#b36b19 }
+.theme-5{ --bg-1:#fff5fb; --bg-2:#fef7ff; --card:#fff; --muted:#6a5c6a; --accent:#e6b3ff; --accent-2:#ffd4ff; --accent-3:#9b5fb2 }
+.theme-6{ --bg-1:#f5fff9; --bg-2:#f0fff6; --card:#ffffff; --muted:#4b6b60; --accent:#6de0c2; --accent-2:#c9fff0; --accent-3:#2f9b7f }
+.theme-7{ --bg-1:#fff9f2; --bg-2:#fff7f0; --card:#fffefb; --muted:#6b4c3b; --accent:#ffb6a4; --accent-2:#ffdccf; --accent-3:#c05a34 }
+.theme-8{ --bg-1:#f8fbff; --bg-2:#f3f9ff; --card:#ffffff; --muted:#4b5870; --accent:#a4c8ff; --accent-2:#dceeff; --accent-3:#406ea8 }
+.theme-9{ --bg-1:#fffaf2; --bg-2:#fff6e8; --card:#fffef8; --muted:#6b5f4a; --accent:#ffd6b6; --accent-2:#ffeedd; --accent-3:#c58541 }
+.theme-10{ --bg-1:#f4f7ff; --bg-2:#eef2ff; --card:#ffffff; --muted:#4b4f6b; --accent:#c3b6ff; --accent-2:#e8e2ff; --accent-3:#6b52d1 }
+.theme-11{ --bg-1:#fff2f4; --bg-2:#fff5f7; --card:#fff; --muted:#6b4b56; --accent:#ff9bb6; --accent-2:#ffd6e6; --accent-3:#d15a7b }
+.theme-12{ --bg-1:#f2fff7; --bg-2:#ecfff5; --card:#ffffff; --muted:#3d6b59; --accent:#7af0b1; --accent-2:#d9ffe6; --accent-3:#2f9b6f }
+.theme-13{ --bg-1:#fff7ee; --bg-2:#fff2e6; --card:#fff; --muted:#6b553d; --accent:#ffd39b; --accent-2:#fff0d9; --accent-3:#c38a3d }
+.theme-14{ --bg-1:#f7f2ff; --bg-2:#f2efff; --card:#fff; --muted:#534b6b; --accent:#cdb6ff; --accent-2:#efe9ff; --accent-3:#7b60c8 }
+.theme-15{ --bg-1:#fff5f9; --bg-2:#fff1f6; --card:#fff; --muted:#6b5160; --accent:#ffb3d9; --accent-2:#ffdced; --accent-3:#c46588 }
+.theme-16{ --bg-1:#f0fffb; --bg-2:#e8fff7; --card:#fff; --muted:#3b6b63; --accent:#93f0dd; --accent-2:#dffef4; --accent-3:#2b8f79 }
+.theme-17{ --bg-1:#fffaf7; --bg-2:#fff8f4; --card:#fff; --muted:#6b5b4b; --accent:#ffd4c4; --accent-2:#fff0e8; --accent-3:#c58b70 }
+.theme-18{ --bg-1:#f7fbff; --bg-2:#f2f9ff; --card:#fff; --muted:#4b606b; --accent:#9be0ff; --accent-2:#dff6ff; --accent-3:#2f88b3 }
+.theme-19{ --bg-1:#fffaf4; --bg-2:#fff8f2; --card:#fff; --muted:#5b4b3b; --accent:#ffd9a6; --accent-2:#fff1dc; --accent-3:#c78b3f }
+.theme-20{ --bg-1:#f7f7f9; --bg-2:#eef0f4; --card:#ffffff; --muted:#55606b; --accent:#9bd3ff; --accent-2:#e6f4ff; --accent-3:#3c7ea6 }
+
+/* swatch preview helper (show gradient using theme preview variables when applied to :root). We use inline background on each swatch for explicit preview colors. */
+.theme-swatch .swatch-sample{box-shadow:inset 0 -6px 10px rgba(0,0,0,0.04)}
+
+@media (max-width:600px){
+  .theme-grid{grid-template-columns:repeat(4,1fr)}
+}

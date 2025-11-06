@@ -290,6 +290,8 @@ function saveTaskAndClose(){
     }catch(e){ console.error('saveTaskAndClose (edit) failed', e); try{ showToast('保存中にエラーが発生しました: ' + (e && e.message || e)); }catch(_){ } return; }
     // close modal and refresh
     try{ const dlgEl = document.getElementById("endModal"); if(dlgEl && typeof dlgEl.close === 'function'){ dlgEl.close(); } else if(dlgEl){ dlgEl.style.display = 'none'; dlgEl.classList.remove('modal-fallback'); } }catch(e){ }
+    // Ensure logs reflect the update immediately
+    try{ renderLogs(); }catch(e){}
     render();
     try{ updateTargetUI(); }catch(e){}
     try{ updateControlButtons(); }catch(e){}
@@ -333,6 +335,8 @@ function saveTaskAndClose(){
       console.error('saveTask returned false');
       return;
     }
+  // Immediately refresh logs so the newly saved entry is visible without navigation
+  try{ renderLogs(); }catch(e){}
   applyLayer(layer);
   sessionStart = null;
   if(appTimer) { appTimer.pause(); } else { stopTimerInterval(); }
@@ -829,6 +833,79 @@ try{
   // also allow double-clicking existing fav item label to use
   const favListEl = document.getElementById('favList'); if(favListEl){ favListEl.addEventListener('dblclick', (ev)=>{ const item = ev.target.closest && ev.target.closest('.fav-item'); if(!item) return; const m = Number(item.getAttribute('data-min')); if(m){ setTargetMinutes(m); closeFavs(); } }); }
 }catch(e){/* ignore binding errors */}
+
+// --- Theme picker: 20 themes, apply and persist ---
+const THEME_KEY = 'uiTheme:v1';
+const THEMES = [
+  {id:1,name:'Pastel Pink', c1:'#ffecf5', c2:'#ffe6f0'},
+  {id:2,name:'Mint Breeze', c1:'#e8fff3', c2:'#d8fff0'},
+  {id:3,name:'Ocean Foam', c1:'#e8f9ff', c2:'#d9f3ff'},
+  {id:4,name:'Sunny Peach', c1:'#fff3e6', c2:'#ffe8d0'},
+  {id:5,name:'Lavender', c1:'#f7edff', c2:'#f1e8ff'},
+  {id:6,name:'Aqua Mint', c1:'#e9fff8', c2:'#dffdf4'},
+  {id:7,name:'Coral', c1:'#fff0ea', c2:'#ffe6de'},
+  {id:8,name:'Sky Blue', c1:'#eef7ff', c2:'#e6f2ff'},
+  {id:9,name:'Warm Sand', c1:'#fff7ec', c2:'#fff2dd'},
+  {id:10,name:'Grape', c1:'#f1eaff', c2:'#eadfff'},
+  {id:11,name:'Rose', c1:'#fff1f3', c2:'#ffe6ea'},
+  {id:12,name:'Emerald', c1:'#eafff1', c2:'#dafde6'},
+  {id:13,name:'Golden', c1:'#fff6e6', c2:'#fff0d6'},
+  {id:14,name:'Indigo', c1:'#f3f0ff', c2:'#ece9ff'},
+  {id:15,name:'Candy', c1:'#fff5fb', c2:'#ffedf6'},
+  {id:16,name:'Seafoam', c1:'#e9fff8', c2:'#dff7ef'},
+  {id:17,name:'Blush', c1:'#fff7f6', c2:'#fff0ef'},
+  {id:18,name:'Cerulean', c1:'#f0fbff', c2:'#e6f6ff'},
+  {id:19,name:'Apricot', c1:'#fff7ee', c2:'#fff1dd'},
+  {id:20,name:'Cool Slate', c1:'#f4f7fa', c2:'#eef2f6'}
+];
+
+function applyThemeId(id){
+  try{
+    const root = document.documentElement || document.body;
+    if(window._currentThemeClass){ try{ root.classList.remove(window._currentThemeClass); }catch(e){} }
+    const cls = 'theme-' + String(id);
+    try{ root.classList.add(cls); window._currentThemeClass = cls; }catch(e){}
+    try{ localStorage.setItem(THEME_KEY, String(id)); }catch(e){}
+  }catch(e){ console.warn('applyThemeId failed', e); }
+}
+
+function renderThemeGrid(){
+  const grid = document.getElementById('themeGrid'); if(!grid) return;
+  grid.innerHTML = THEMES.map(t => {
+    return `<button class="theme-swatch" data-theme="${t.id}" type="button" title="${t.name}"><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}</div></button>`;
+  }).join('');
+}
+
+function openThemes(){
+  const overlay = document.getElementById('themeOverlay');
+  const popup = document.getElementById('themePopup');
+  if(!overlay || !popup) return;
+  overlay.setAttribute('aria-hidden','false'); overlay.style.display = 'flex'; popup.setAttribute('aria-hidden','false');
+  renderThemeGrid();
+  if(!window._themeOverlayBound){
+    window._themeOverlayBound = true;
+    try{ overlay.addEventListener('click', (ev)=>{ if(ev.target === overlay) closeThemes(); }); }catch(e){}
+    try{ document.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape'){ const ov = document.getElementById('themeOverlay'); if(ov && ov.style.display !== 'none'){ closeThemes(); } } }); }catch(e){}
+  }
+}
+
+function closeThemes(){
+  const overlay = document.getElementById('themeOverlay');
+  const popup = document.getElementById('themePopup');
+  if(!overlay || !popup) return;
+  overlay.setAttribute('aria-hidden','true'); overlay.style.display = 'none'; popup.setAttribute('aria-hidden','true');
+  try{ const btn = document.getElementById('themeOpenBtn'); if(btn && typeof btn.focus === 'function') btn.focus(); }catch(e){}
+}
+
+// Bind theme UI controls
+try{
+  const themeOpen = document.getElementById('themeOpenBtn'); if(themeOpen) themeOpen.addEventListener('click', ()=>{ openThemes(); });
+  const themeClose = document.getElementById('themeCloseBtn'); if(themeClose) themeClose.addEventListener('click', ()=>{ closeThemes(); });
+  const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(id){ applyThemeId(id); closeThemes(); } }); }
+}catch(e){/* ignore binding errors */}
+
+// Apply saved theme on load (or leave default)
+try{ const saved = localStorage.getItem(THEME_KEY); if(saved) applyThemeId(saved); }catch(e){}
 
 
 // Mobile-visible toast helper for environments without console (iPhone)

@@ -96,11 +96,12 @@
       <label for="targetMinutesInput">目標時間（分）</label>
       <input id="targetMinutesInput" type="number" min="1" max="240" step="1" value="5" />
       <button id="favOpenBtn" type="button" title="お気に入りを管理" aria-haspopup="dialog">★</button>
+      <button id="themeOpenBtn" type="button" title="テーマを変更" aria-haspopup="dialog">🎨</button>
       <button id="upgradeBtn" type="button">Go Pro</button>
       <div id="proBadge">Free</div>
     </div>
     <!-- Favorites popup (hidden by default) wrapped in an overlay to behave like a modal -->
-  <div id="favoritesOverlay" class="overlay" aria-hidden="true">
+    <div id="favoritesOverlay" class="overlay" aria-hidden="true">
       <div id="favoritesPopup" class="favorites-popup" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="fav-header">お気に入り</div>
         <div class="fav-body">
@@ -112,7 +113,18 @@
         </div>
         <div class="fav-actions"><button id="favCloseBtn" type="button">閉じる</button></div>
       </div>
-    </div>
+      </div>
+
+      <!-- Theme picker overlay -->
+    <div id="themeOverlay" class="overlay" aria-hidden="true">
+        <div id="themePopup" class="theme-popup" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="fav-header">テーマを選択</div>
+          <div class="fav-body">
+            <div id="themeGrid" class="theme-grid" aria-live="polite"></div>
+          </div>
+          <div class="fav-actions"><button id="themeCloseBtn" type="button">閉じる</button></div>
+        </div>
+      </div>
     <!-- Auto-save settings: allow user to choose interval or turn off. -->
   <div id="autoSaveControls" class="text-center mt-8">
       <label for="autoSaveSelect">自動保存:</label>
