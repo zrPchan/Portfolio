@@ -68,8 +68,34 @@ export function deleteTask(id){
   try{
     const key = `tasks:${keyDay()}`;
     const arr = JSON.parse(localStorage.getItem(key) || "[]");
+    // find the task being deleted so we can decrement today's layer total accordingly
+    const item = arr.find(x => x && x.id === id);
     const newArr = arr.filter(x => x && x.id !== id);
     localStorage.setItem(key, JSON.stringify(newArr));
+    try{
+      if(item){
+        // compute removed layers from elapsed or from stored layer if present
+        const UNIT_SEC = 37.5;
+        let elapsed = 0;
+        if(typeof item.elapsedSec === 'number') elapsed = item.elapsedSec;
+        else if(item.end && item.start) elapsed = (item.end - item.start) || 0;
+        let removedLayers = 0;
+        if(elapsed >= 60){ removedLayers = Math.floor(elapsed / UNIT_SEC); }
+        else if(typeof item.layer === 'number'){ removedLayers = item.layer || 0; }
+        // adjust today's stored totals
+        try{
+          const todayKey = `daily:${keyDay()}`;
+          const raw = localStorage.getItem(todayKey);
+          if(raw){
+            const d = JSON.parse(raw || "{}");
+            d.layerTotal = Math.max(0, (d.layerTotal || 0) - removedLayers);
+            d.bottlesToday = Math.floor((d.layerTotal || 0) / 100);
+            d.bottlesCum = loadCumBase() + d.bottlesToday;
+            localStorage.setItem(todayKey, JSON.stringify(d));
+          }
+        }catch(e){ /* ignore today update failure */ }
+      }
+    }catch(e){ /* ignore compute errors */ }
     try{ if(typeof window !== 'undefined' && window.dispatchEvent){ window.dispatchEvent(new CustomEvent('sandstudy:tasks-changed',{detail:{action:'delete', id}})); } }catch(e){}
     return true;
   }catch(e){ console.error('deleteTask failed', e); return false; }
