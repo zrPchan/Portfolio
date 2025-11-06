@@ -24,6 +24,7 @@
   --overtime-text: #7a4b11;
   --chip-bg: #fff2f7;
   --update-bg: #0b63ff;
+  --sand-dot-opacity: 0.12;
 }
 
 body{font-family:'Baloo 2','Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; margin:18px; color:var(--text); background: linear-gradient(180deg, var(--bg-1), var(--bg-2));}
@@ -33,8 +34,22 @@ body{font-family:'Baloo 2','Inter',system-ui,-apple-system,'Segoe UI',Roboto,Hel
 .bottle{position:relative;width:160px;height:260px;margin:18px auto;border-radius:28px;overflow:hidden;background:linear-gradient(180deg,var(--card),var(--bg-2));box-shadow:var(--shadow);border:1px solid var(--border)}
 .rim{position:absolute;inset:0;border-radius:28px;pointer-events:none}
 .sand{position:absolute;left:8px;right:8px;bottom:8px;height:calc(100% - 16px);overflow:hidden;border-radius:18px}
-.sand-layer{position:absolute;left:0;width:100%;box-sizing:border-box;border-top:1px solid rgba(0,0,0,0.03);border-radius:8px;background:linear-gradient(180deg,var(--sand-1),var(--sand-2))}
+.sand-layer{position:absolute;left:0;width:100%;box-sizing:border-box;border-top:1px solid rgba(0,0,0,0.03);border-radius:8px;background:linear-gradient(180deg,var(--sand-1),var(--sand-2));position:relative;overflow:hidden}
 .sand-layer.partial{border-top:1px solid rgba(0,0,0,0.06)}
+
+/* subtle sand grain: overlay small dark dots to simulate sand texture */
+.sand-layer::after{
+  content: "";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:8px;
+  /* small repeating dots — use multiply so they darken the underlying sand color */
+  background-image: radial-gradient(circle, rgba(0,0,0,var(--sand-dot-opacity)) 20%, rgba(0,0,0,0) 21%);
+  background-size: 6px 6px;
+  mix-blend-mode: multiply;
+  opacity:0.95; /* leave actual darkness to rgba alpha in gradient */
+}
 .controls{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
 .controls button{min-width:84px}
 
