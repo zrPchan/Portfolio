@@ -162,6 +162,22 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .update-controls{max-width:420px;margin:6px auto 0 auto;text-align:center;display:none}
 .update-controls .btn-ghost{border-radius:8px;padding:6px 10px}
 
+/* Favorites popup */
+.favorites-popup{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:var(--card);border-radius:12px;padding:12px;box-shadow:0 14px 40px rgba(34,20,35,0.12);width:320px;max-width:92%;z-index:500;display:none}
+.favorites-popup[aria-hidden="false"]{display:block}
+.favorites-popup .fav-header{font-weight:700;margin-bottom:8px;text-align:center}
+.favorites-popup .fav-body{display:flex;flex-direction:column;gap:8px}
+.fav-add{display:flex;gap:8px;align-items:center}
+.fav-add input{flex:1;padding:8px;border-radius:8px;border:1px solid #ddd}
+.fav-add button{padding:8px 10px;border-radius:8px;background:var(--accent-2);border:none}
+.fav-list{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.fav-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fffef7);border:1px solid rgba(0,0,0,0.04)}
+.fav-item button{margin-left:8px;padding:6px 8px;border-radius:6px}
+.fav-actions{display:flex;justify-content:center;margin-top:8px}
+
+/* small favorite icon near inputs */
+#favOpenBtn{margin-left:6px;padding:6px 8px;border-radius:8px;background:transparent;border:1px solid rgba(0,0,0,0.06);cursor:pointer}
+
 /* Small screen adjustments */
 @media (max-width:600px){
   body{margin:12px}

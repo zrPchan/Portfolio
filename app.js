@@ -760,6 +760,46 @@ async function unsubscribePush(){
 // expose helpers for manual testing
 try{ window.subscribeForPush = subscribeForPush; window.unsubscribePush = unsubscribePush; }catch(e){}
 
+// --- Favorites (preset target minutes) ---
+const FAV_KEY = 'favTargets:v1';
+function loadFavs(){ try{ const s = localStorage.getItem(FAV_KEY); return s ? JSON.parse(s) : []; }catch(e){ return []; } }
+function saveFavs(arr){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }catch(e){}
+  renderFavList(); }
+
+function renderFavList(){
+  const listEl = document.getElementById('favList'); if(!listEl) return;
+  const arr = loadFavs();
+  if(arr.length === 0){ listEl.innerHTML = '<div class="log-empty">お気に入りがありません</div>'; return; }
+  listEl.innerHTML = arr.map(v => {
+    return `<div class="fav-item" data-min="${v}"><div class="fav-label">${v} 分</div><div class="fav-actions-inner"><button class="fav-use" data-min="${v}">選択</button><button class="fav-remove" data-min="${v}">削除</button></div></div>`;
+  }).join('');
+}
+
+function openFavs(){ const p = document.getElementById('favoritesPopup'); if(!p) return; p.setAttribute('aria-hidden','false'); p.style.display = 'block'; renderFavList(); const inp = document.getElementById('favMinutesInput'); if(inp) inp.focus(); }
+function closeFavs(){ const p = document.getElementById('favoritesPopup'); if(!p) return; p.setAttribute('aria-hidden','true'); p.style.display = 'none'; }
+
+document.addEventListener('click', (ev)=>{
+  // delegation for fav use/remove
+  const useBtn = ev.target.closest && ev.target.closest('.fav-use');
+  if(useBtn){ const m = Number(useBtn.getAttribute('data-min')); if(m){ setTargetMinutes(m); closeFavs(); } return; }
+  const remBtn = ev.target.closest && ev.target.closest('.fav-remove');
+  if(remBtn){ const m = Number(remBtn.getAttribute('data-min')); if(!m) return; const arr = loadFavs().filter(x=>x!==m); saveFavs(arr); return; }
+});
+
+// Bind fav UI controls
+try{
+  const favOpen = document.getElementById('favOpenBtn'); if(favOpen) favOpen.addEventListener('click', ()=>{ openFavs(); });
+  const favClose = document.getElementById('favCloseBtn'); if(favClose) favClose.addEventListener('click', ()=>{ closeFavs(); });
+  const favAdd = document.getElementById('favAddBtn'); if(favAdd){ favAdd.addEventListener('click', ()=>{
+    const inp = document.getElementById('favMinutesInput'); if(!inp) return; const v = Number(inp.value || 0); if(!v || v < 1) { showToast('有効な分数を入力してください'); return; }
+    let arr = loadFavs(); if(arr.indexOf(v) === -1){ arr.push(v); arr.sort((a,b)=>a-b); saveFavs(arr); }
+    inp.value = '';
+  }); }
+  // also allow double-clicking existing fav item label to use
+  const favListEl = document.getElementById('favList'); if(favListEl){ favListEl.addEventListener('dblclick', (ev)=>{ const item = ev.target.closest && ev.target.closest('.fav-item'); if(!item) return; const m = Number(item.getAttribute('data-min')); if(m){ setTargetMinutes(m); closeFavs(); } }); }
+}catch(e){/* ignore binding errors */}
+
+
 // Mobile-visible toast helper for environments without console (iPhone)
 function showToast(msg, ms = 2000){
   try{
