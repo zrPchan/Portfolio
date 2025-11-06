@@ -256,20 +256,15 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .swatch-label{font-size:12px;color:var(--muted);text-align:center}
 
 /* Theme variable classes: each theme sets the core CSS variables used by the app */
-.theme-basic-sand{ --bg-1:#fffaf5; --bg-2:#fff6ec; --card:#fffef8; --muted:#6b5f4a; --accent:#d6b77a; --accent-2:#f3e0bf; --accent-3:#b89258; --sand-1:#fff3df; --sand-2:#d6b77a }
-.theme-basic-red{ --bg-1:#fff6f6; --bg-2:#fff1f1; --card:#ffffff; --muted:#6b4b4b; --accent:#e05a6a; --accent-2:#f6c9cf; --accent-3:#b33a46; --sand-1:#ffd6d9; --sand-2:#e05a6a }
-.theme-basic-blue{ --bg-1:#f6fbff; --bg-2:#eef7ff; --card:#ffffff; --muted:#3b4b5b; --accent:#4a8fe0; --accent-2:#cfe8ff; --accent-3:#2f6fb3; --sand-1:#cfe8ff; --sand-2:#4a8fe0 }
-.theme-basic-green{ --bg-1:#f6fff6; --bg-2:#f0fff0; --card:#ffffff; --muted:#3b6b4b; --accent:#34a853; --accent-2:#cdefd0; --accent-3:#2f8b5a; --sand-1:#cdefd0; --sand-2:#34a853 }
-.theme-basic-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; --card:#ffffff; --muted:#6b4b5b; --accent:#f47aa6; --accent-2:#ffd6ea; --accent-3:#c04b6b; --sand-1:#ffd6ea; --sand-2:#f47aa6 }
-.theme-basic-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; --card:#ffffff; --muted:#55606b; --accent:#9aa6b3; --accent-2:#e6ebf1; --accent-3:#6b7784; --sand-1:#e6ebf1; --sand-2:#9aa6b3 }
+.theme-sand{ --bg-1:#fffaf5; --bg-2:#fff6ec; --card:#fffef8; --muted:#6b5f4a; --accent:#d6b77a; --accent-2:#f3e0bf; --accent-3:#b89258; --sand-1:#fff3df; --sand-2:#d6b77a }
+.theme-red{ --bg-1:#fff6f6; --bg-2:#fff1f1; --card:#ffffff; --muted:#6b4b4b; --accent:#e05a6a; --accent-2:#f6c9cf; --accent-3:#b33a46; --sand-1:#ffd6d9; --sand-2:#e05a6a }
+.theme-blue{ --bg-1:#f6fbff; --bg-2:#eef7ff; --card:#ffffff; --muted:#3b4b5b; --accent:#4a8fe0; --accent-2:#cfe8ff; --accent-3:#2f6fb3; --sand-1:#cfe8ff; --sand-2:#4a8fe0 }
+.theme-green{ --bg-1:#f6fff6; --bg-2:#f0fff0; --card:#ffffff; --muted:#3b6b4b; --accent:#34a853; --accent-2:#cdefd0; --accent-3:#2f8b5a; --sand-1:#cdefd0; --sand-2:#34a853 }
+.theme-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; --card:#ffffff; --muted:#6b4b5b; --accent:#f47aa6; --accent-2:#ffd6ea; --accent-3:#c04b6b; --sand-1:#ffd6ea; --sand-2:#f47aa6 }
+.theme-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; --card:#ffffff; --muted:#55606b; --accent:#9aa6b3; --accent-2:#e6ebf1; --accent-3:#6b7784; --sand-1:#e6ebf1; --sand-2:#9aa6b3 }
 
 /* Solid palettes replace pastel/dark sets: stronger, single-hue sand gradients */
-.theme-solid-sand{ --bg-1:#fff9f0; --bg-2:#fff6ec; --card:#fffef8; --muted:#6b5f4a; --accent:#b89258; --accent-2:#d6b77a; --accent-3:#8f6b3a; --sand-1:#f3e0bf; --sand-2:#b89258 }
-.theme-solid-red{ --bg-1:#fff6f6; --bg-2:#fff1f1; --card:#ffffff; --muted:#6b4b4b; --accent:#c83a4a; --accent-2:#e05a6a; --accent-3:#9b2a38; --sand-1:#ffc6cc; --sand-2:#c83a4a }
-.theme-solid-blue{ --bg-1:#f6fbff; --bg-2:#eef7ff; --card:#ffffff; --muted:#3b4b5b; --accent:#2f6fb3; --accent-2:#4a8fe0; --accent-3:#1f4f83; --sand-1:#d6eaff; --sand-2:#2f6fb3 }
-.theme-solid-green{ --bg-1:#f6fff6; --bg-2:#f0fff0; --card:#ffffff; --muted:#3b6b4b; --accent:#2f8b5a; --accent-2:#34a853; --accent-3:#1f6b43; --sand-1:#d9f7e4; --sand-2:#2f8b5a }
-.theme-solid-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; --card:#ffffff; --muted:#6b4b5b; --accent:#c04b6b; --accent-2:#f47aa6; --accent-3:#993d54; --sand-1:#ffdbe9; --sand-2:#c04b6b }
-.theme-solid-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; --card:#ffffff; --muted:#55606b; --accent:#6b7784; --accent-2:#9aa6b3; --accent-3:#3f4650; --sand-1:#f0f4f8; --sand-2:#9aa6b3 }
+/* removed Solid palettes by user request */
 
 /* swatch preview helper (show gradient using theme preview variables when applied to :root). We use inline background on each swatch for explicit preview colors. */
 .theme-swatch .swatch-sample{box-shadow:inset 0 -6px 10px rgba(0,0,0,0.04)}

@@ -853,29 +853,29 @@ try{
 const THEME_KEY = 'uiTheme:v1';
 const THEMES = [
   // Basic
-  {id:'basic-sand', name:'Basic — Sand', c1:'#fffaf5', c2:'#fff6ec'},
-  {id:'basic-red', name:'Basic — Red', c1:'#fff6f6', c2:'#fff1f1'},
-  {id:'basic-blue', name:'Basic — Blue', c1:'#f6fbff', c2:'#eef7ff'},
-  {id:'basic-green', name:'Basic — Green', c1:'#f6fff6', c2:'#f0fff0'},
-  {id:'basic-pink', name:'Basic — Pink', c1:'#fff7fb', c2:'#fff2f8'},
-  {id:'basic-silver', name:'Basic — Silver', c1:'#f7f8fa', c2:'#eef0f3'},
-  // Solid (strong, single-hue sand palettes)
-  {id:'solid-sand', name:'Solid — Sand', c1:'#fff9f0', c2:'#fff6ec'},
-  {id:'solid-red', name:'Solid — Red', c1:'#fff6f6', c2:'#fff1f1'},
-  {id:'solid-blue', name:'Solid — Blue', c1:'#f6fbff', c2:'#eef7ff'},
-  {id:'solid-green', name:'Solid — Green', c1:'#f6fff6', c2:'#f0fff0'},
-  {id:'solid-pink', name:'Solid — Pink', c1:'#fff7fb', c2:'#fff2f8'},
-  {id:'solid-silver', name:'Solid — Silver', c1:'#f7f8fa', c2:'#eef0f3'}
+  {id:'sand', name:'Sand', c1:'#fffaf5', c2:'#fff6ec'},
+  {id:'red', name:'Red', c1:'#fff6f6', c2:'#fff1f1'},
+  {id:'blue', name:'Blue', c1:'#f6fbff', c2:'#eef7ff'},
+  {id:'green', name:'Green', c1:'#f6fff6', c2:'#f0fff0'},
+  {id:'pink', name:'Pink', c1:'#fff7fb', c2:'#fff2f8'},
+  {id:'silver', name:'Silver', c1:'#f7f8fa', c2:'#eef0f3'}
 ];
 
 function applyThemeId(id){
   try{
     const root = document.documentElement || document.body;
     if(window._currentThemeClass){ try{ root.classList.remove(window._currentThemeClass); }catch(e){} }
-    // accept either full class (starts with 'theme-') or id suffix
-    const cls = String(id).startsWith('theme-') ? String(id) : ('theme-' + String(id));
+    // normalize legacy ids and accept either full class (starts with 'theme-') or id suffix
+    let raw = String(id || '');
+    // if passed a full class like 'theme-basic-sand', strip leading 'theme-'
+    if(raw.startsWith('theme-')) raw = raw.slice(6);
+    // handle legacy prefixes 'basic-' and 'solid-'
+    if(raw.startsWith('basic-')) raw = raw.slice(6);
+    if(raw.startsWith('solid-')) raw = raw.slice(6);
+    // final class to add
+    const cls = 'theme-' + raw;
     try{ root.classList.add(cls); window._currentThemeClass = cls; }catch(e){}
-    try{ localStorage.setItem(THEME_KEY, String(id)); }catch(e){}
+    try{ localStorage.setItem(THEME_KEY, raw); }catch(e){}
   }catch(e){ console.warn('applyThemeId failed', e); }
 }
 
