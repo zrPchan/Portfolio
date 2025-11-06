@@ -835,7 +835,7 @@ try{
 }catch(e){/* ignore binding errors */}
 
 
-// --- Theme picker: palettes (basic / pastel / dark × sand, red, blue, green, pink, silver)
+// --- Theme picker: palettes (basic / solid × sand, red, blue, green, pink, silver)
 const THEME_KEY = 'uiTheme:v1';
 const THEMES = [
   // Basic
@@ -845,20 +845,13 @@ const THEMES = [
   {id:'basic-green', name:'Basic — Green', c1:'#f6fff6', c2:'#f0fff0'},
   {id:'basic-pink', name:'Basic — Pink', c1:'#fff7fb', c2:'#fff2f8'},
   {id:'basic-silver', name:'Basic — Silver', c1:'#f7f8fa', c2:'#eef0f3'},
-  // Pastel
-  {id:'pastel-sand', name:'Pastel — Sand', c1:'#fffdf9', c2:'#fff9f2'},
-  {id:'pastel-red', name:'Pastel — Red', c1:'#fff7f8', c2:'#fff2f4'},
-  {id:'pastel-blue', name:'Pastel — Blue', c1:'#fbfdff', c2:'#f4f8ff'},
-  {id:'pastel-green', name:'Pastel — Green', c1:'#fbfff9', c2:'#f4fff2'},
-  {id:'pastel-pink', name:'Pastel — Pink', c1:'#fff9fb', c2:'#fff4f8'},
-  {id:'pastel-silver', name:'Pastel — Silver', c1:'#f7f9fb', c2:'#eef4f8'},
-  // Dark
-  {id:'dark-sand', name:'Dark — Sand', c1:'#2b241f', c2:'#2f2a23'},
-  {id:'dark-red', name:'Dark — Red', c1:'#2b1f21', c2:'#301a1d'},
-  {id:'dark-blue', name:'Dark — Blue', c1:'#0f2030', c2:'#102534'},
-  {id:'dark-green', name:'Dark — Green', c1:'#10261b', c2:'#143422'},
-  {id:'dark-pink', name:'Dark — Pink', c1:'#2b1f27', c2:'#33232b'},
-  {id:'dark-silver', name:'Dark — Silver', c1:'#121417', c2:'#1a1c20'}
+  // Solid (strong, single-hue sand palettes)
+  {id:'solid-sand', name:'Solid — Sand', c1:'#fff9f0', c2:'#fff6ec'},
+  {id:'solid-red', name:'Solid — Red', c1:'#fff6f6', c2:'#fff1f1'},
+  {id:'solid-blue', name:'Solid — Blue', c1:'#f6fbff', c2:'#eef7ff'},
+  {id:'solid-green', name:'Solid — Green', c1:'#f6fff6', c2:'#f0fff0'},
+  {id:'solid-pink', name:'Solid — Pink', c1:'#fff7fb', c2:'#fff2f8'},
+  {id:'solid-silver', name:'Solid — Silver', c1:'#f7f8fa', c2:'#eef0f3'}
 ];
 
 function applyThemeId(id){
