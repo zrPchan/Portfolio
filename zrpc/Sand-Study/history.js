@@ -1,5 +1,4 @@
-// history.js - aggregate localStorage data and render charts for time-of-day vs mood/effort
-// Chart.js is loaded via CDN in history.html and exposed as global `Chart`.
+// history.js - aggregate localStorage data and render heatmaps using Canvas API
 
 function keyTasksForDay(day){ return `tasks:${day}`; }
 function keyDailyForDay(day){ return `daily:${day}`; }
@@ -291,9 +290,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(status) status.textContent = `読み込んだエントリ: ${entries.length}`;
     if(entries.length === 0){
       if(status) status.textContent = '読み込んだエントリ: 0（データがありません）';
-      // clear charts if present
-      if(window['moodChartChart']) try{ window['moodChartChart'].destroy(); }catch(e){}
-      if(window['effortChartChart']) try{ window['effortChartChart'].destroy(); }catch(e){}
+      // clear canvases if present
+      const moodCanvas = document.getElementById('moodChart');
+      const effortCanvas = document.getElementById('effortChart');
+      if(moodCanvas){ const ctx = moodCanvas.getContext('2d'); ctx.clearRect(0, 0, moodCanvas.width, moodCanvas.height); }
+      if(effortCanvas){ const ctx = effortCanvas.getContext('2d'); ctx.clearRect(0, 0, effortCanvas.width, effortCanvas.height); }
       const container = document.getElementById('bottleList'); if(container) container.innerHTML = '<div class="log-empty">データがありません</div>';
       alert('選択範囲にデータが見つかりません');
       // still attach export (no-op)
