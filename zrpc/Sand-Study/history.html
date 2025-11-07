@@ -17,6 +17,38 @@
       <button id="drawBtn" type="button">描画</button>
       <button id="exportCsv" type="button">CSV エクスポート</button>
     </div>
+    
+    <!-- デバッグ用ログ追加 -->
+    <details class="debug-panel text-center mt-8" style="max-width:600px;margin:20px auto;padding:16px;background:rgba(59,130,246,0.1);border-radius:8px;">
+      <summary style="cursor:pointer;font-weight:bold;color:#3b82f6;">🛠️ デバッグ: ログ手動追加</summary>
+      <div style="margin-top:16px;display:grid;gap:12px;">
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+          <label>日付:</label>
+          <input id="debugDate" type="date" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+        </div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+          <label>時刻:</label>
+          <input id="debugTime" type="time" value="12:00" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+        </div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+          <label>M値 (1-5):</label>
+          <input id="debugM" type="number" min="1" max="5" value="3" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+        </div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+          <label>E値 (1-5):</label>
+          <input id="debugE" type="number" min="1" max="5" value="3" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+        </div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+          <label>レイヤー数:</label>
+          <input id="debugLayer" type="number" min="0" value="1" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+        </div>
+        <button id="addDebugLog" type="button" style="margin-top:8px;padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">
+          ログ追加
+        </button>
+        <div id="debugStatus" style="margin-top:8px;font-size:0.9rem;color:#666;"></div>
+      </div>
+    </details>
+    
     <div id="historyStatus" class="text-center mt-8 muted"></div>
 
     <section id="charts" class="container-720">

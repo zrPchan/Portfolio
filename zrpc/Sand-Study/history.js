@@ -252,6 +252,54 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const endEl = document.getElementById('endDate');
   if(startEl) startEl.value = today;
   if(endEl) endEl.value = today;
+  
+  // デバッグ用ログ追加機能
+  const debugDateEl = document.getElementById('debugDate');
+  if(debugDateEl) debugDateEl.value = today;
+  
+  document.getElementById('addDebugLog')?.addEventListener('click', () => {
+    const dateStr = document.getElementById('debugDate')?.value;
+    const timeStr = document.getElementById('debugTime')?.value || '12:00';
+    const m = parseInt(document.getElementById('debugM')?.value || '3');
+    const e = parseInt(document.getElementById('debugE')?.value || '3');
+    const layer = parseInt(document.getElementById('debugLayer')?.value || '1');
+    
+    if(!dateStr){ alert('日付を入力してください'); return; }
+    if(m < 1 || m > 5 || e < 1 || e > 5){ alert('M値とE値は1-5の範囲で入力してください'); return; }
+    
+    // Create timestamp from date + time
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hour, minute] = timeStr.split(':').map(Number);
+    const timestamp = new Date(year, month - 1, day, hour, minute, 0).getTime() / 1000;
+    
+    // Create debug log entry
+    const debugEntry = {
+      start: timestamp,
+      createdAt: timestamp,
+      mood: m,
+      effort: e,
+      layer: layer,
+      debug: true // mark as debug entry
+    };
+    
+    // Save to localStorage
+    const tasksKey = keyTasksForDay(dateStr);
+    const existingRaw = localStorage.getItem(tasksKey) || '[]';
+    let existing = [];
+    try{ existing = JSON.parse(existingRaw) || []; }catch(err){ console.error('Parse error:', err); }
+    existing.push(debugEntry);
+    localStorage.setItem(tasksKey, JSON.stringify(existing));
+    
+    // Update status
+    const statusEl = document.getElementById('debugStatus');
+    if(statusEl){
+      statusEl.textContent = `✅ 追加完了: ${dateStr} ${timeStr} M=${m} E=${e} Layer=${layer}`;
+      statusEl.style.color = '#22c55e';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    }
+    
+    console.log('Debug log added:', debugEntry);
+  });
 
   document.getElementById('drawBtn').addEventListener('click', ()=>{
     const s = parseDateInput('startDate'); const e = parseDateInput('endDate');
