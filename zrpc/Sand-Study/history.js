@@ -1,5 +1,17 @@
 // history.js - aggregate localStorage data and render heatmaps using Canvas API
 
+// Responsive canvas sizing
+function getResponsiveCanvasSize(){
+  const containerWidth = Math.min(window.innerWidth - 40, 1800); // 最大1800px、左右20pxマージン
+  const isMobile = window.innerWidth < 768;
+  
+  if(isMobile){
+    return { width: containerWidth, height: Math.floor(containerWidth * 0.5) }; // モバイル: 2:1
+  } else {
+    return { width: containerWidth, height: Math.floor(containerWidth * 0.33) }; // PC: 3:1
+  }
+}
+
 function keyTasksForDay(day){ return `tasks:${day}`; }
 function keyDailyForDay(day){ return `daily:${day}`; }
 
@@ -63,6 +75,11 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const canvas = document.getElementById(canvasId);
   if(!canvas){ console.warn('Canvas not found', canvasId); return; }
   
+  // Set responsive canvas size
+  const size = getResponsiveCanvasSize();
+  canvas.width = size.width;
+  canvas.height = size.height;
+  
   const ctx = canvas.getContext('2d');
   
   // Validate freqData
@@ -99,11 +116,14 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Canvas dimensions and layout - Extra large for PC
-  const paddingLeft = 90;
-  const paddingRight = 45;
-  const paddingTop = 90;
-  const paddingBottom = 90;
+  // Responsive padding based on canvas size
+  const isMobile = canvas.width < 768;
+  const scale = canvas.width / 1800; // スケール係数
+  
+  const paddingLeft = Math.floor(90 * scale);
+  const paddingRight = Math.floor(45 * scale);
+  const paddingTop = Math.floor(90 * scale);
+  const paddingBottom = Math.floor(90 * scale);
   const gridWidth = canvas.width - paddingLeft - paddingRight;
   const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
@@ -133,11 +153,20 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
     return 'rgba(239, 68, 68, 0.85)';
   };
   
+  // Responsive font sizes
+  const fontSize = {
+    title: Math.floor(28 * scale),
+    cellText: Math.floor(20 * scale),
+    axisLabel: Math.floor(18 * scale),
+    yAxisLabel: Math.floor(20 * scale),
+    axisTitle: Math.floor(22 * scale)
+  };
+  
   // Draw title
   ctx.fillStyle = '#1f2937';
-  ctx.font = 'bold 28px sans-serif';
+  ctx.font = `bold ${fontSize.title}px sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, 50);
+  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, paddingTop * 0.6);
   
   // Draw heatmap cells
   for(let hour = 0; hour < 24; hour++){
@@ -156,13 +185,14 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       
       // Draw border
       ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = Math.max(0.5, scale);
       ctx.strokeRect(x, y, cellWidth - 1, cellHeight - 1);
       
       // Draw count text if significant
-      if(count > 0 && cellWidth > 30){
+      const minCellWidth = isMobile ? 20 : 30;
+      if(count > 0 && cellWidth > minCellWidth){
         ctx.fillStyle = clampedDev > 60 ? 'white' : '#374151';
-        ctx.font = 'bold 20px sans-serif';
+        ctx.font = `bold ${fontSize.cellText}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(count.toString(), x + cellWidth / 2, y + cellHeight / 2);
@@ -172,28 +202,28 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   
   // Draw X-axis labels (hours)
   ctx.fillStyle = '#6b7280';
-  ctx.font = '18px sans-serif';
+  ctx.font = `${fontSize.axisLabel}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   for(let h = 0; h <= 23; h += 2){
     const x = paddingLeft + h * cellWidth + cellWidth / 2;
-    ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + 20);
+    ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + paddingBottom * 0.2);
   }
   
   // Draw Y-axis labels (scores)
-  ctx.font = '20px sans-serif';
+  ctx.font = `${fontSize.yAxisLabel}px sans-serif`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for(let s = 1; s <= 5; s++){
     const y = paddingTop + (5 - s) * cellHeight + cellHeight / 2;
-    ctx.fillText(`${s}点`, paddingLeft - 20, y);
+    ctx.fillText(`${s}点`, paddingLeft - paddingLeft * 0.2, y);
   }
   
   // Draw axis titles
-  ctx.font = 'bold 22px sans-serif';
+  ctx.font = `bold ${fontSize.axisTitle}px sans-serif`;
   ctx.fillStyle = '#374151';
   ctx.textAlign = 'center';
-  ctx.fillText('時刻', canvas.width / 2, canvas.height - 30);
+  ctx.fillText('時刻', canvas.width / 2, canvas.height - paddingBottom * 0.3);
   
   ctx.save();
   ctx.translate(30, canvas.height / 2);
