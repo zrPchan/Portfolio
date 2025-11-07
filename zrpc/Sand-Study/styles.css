@@ -372,6 +372,10 @@ button:disabled{opacity:0.5;cursor:not-allowed}
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background: white;
+  /* 明示的に中央配置 */
+  position: relative;
+  left: 0;
+  right: 0;
 }
 
 .muted{ color:var(--muted) }

@@ -124,18 +124,28 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Responsive padding based on canvas size - 中央配置のため左右対称に
+  // Responsive padding based on canvas size - グリッドを視覚的に中央配置
   const isMobile = canvas.width < 768;
   const scale = canvas.width / 1800; // スケール係数
   
-  const paddingLeft = Math.floor(140 * scale);   // Y軸ラベル用に左を広めに
-  const paddingRight = Math.floor(140 * scale);  // 中央配置のため左と同じ
+  // Y軸ラベル用のスペース（左側のみ）
+  const yAxisLabelSpace = Math.floor(90 * scale);  // Y軸ラベルと「評価値」用
+  const visualPadding = Math.floor(50 * scale);     // 視覚的な余白
+  
+  const paddingLeft = yAxisLabelSpace + visualPadding;   // Y軸ラベルスペース + 余白
+  const paddingRight = yAxisLabelSpace + visualPadding;  // 左と同じ（対称）
   const paddingTop = Math.floor(120 * scale);
   const paddingBottom = Math.floor(120 * scale);
   const gridWidth = canvas.width - paddingLeft - paddingRight;
   const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
   const cellHeight = gridHeight / 5;
+  
+  console.log(`[${canvasId}] Padding - Left: ${paddingLeft}, Right: ${paddingRight}, Grid starts at: ${paddingLeft}, Canvas width: ${canvas.width}`);
+  
+  // Draw grid background for visual debugging (optional)
+  ctx.fillStyle = '#f9fafb';
+  ctx.fillRect(paddingLeft, paddingTop, gridWidth, gridHeight);
   
   // Color scale based on deviation score
   const getColor = (deviation) => {
