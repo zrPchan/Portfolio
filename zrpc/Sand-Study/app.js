@@ -260,6 +260,10 @@ function openEndModal(isAuto = false){
           // ensure timer continues
           isRunning = true;
           startTimerInterval();
+          // fix toggle button text to show "一時停止" when resuming
+          const toggleBtn = document.getElementById('toggleRunBtn');
+          if(toggleBtn) toggleBtn.textContent = '一時停止';
+          updateControlButtons();
         };
       }
     }
