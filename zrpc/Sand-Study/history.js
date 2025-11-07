@@ -7,9 +7,9 @@ function getResponsiveCanvasSize(){
   
   // グリッドは24時間×5段階 = 24:5の比率
   // 正方形セルにするため、パディングを考慮して高さを計算
-  // パディング左120 + 右60 = 180px、上120 + 下120 = 240px
+  // パディング左140 + 右140 = 280px、上120 + 下120 = 240px
   const scale = containerWidth / 1800;
-  const paddingH = Math.floor((120 + 60) * scale); // 左右合計
+  const paddingH = Math.floor((140 + 140) * scale); // 左右合計（対称）
   const paddingV = Math.floor((120 + 120) * scale); // 上下合計
   const gridWidth = containerWidth - paddingH;
   const gridHeight = gridWidth * 5 / 24; // 正方形セルにするための高さ
@@ -124,14 +124,14 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Responsive padding based on canvas size - より大きく
+  // Responsive padding based on canvas size - 中央配置のため左右対称に
   const isMobile = canvas.width < 768;
   const scale = canvas.width / 1800; // スケール係数
   
-  const paddingLeft = Math.floor(120 * scale);   // 90 → 120
-  const paddingRight = Math.floor(60 * scale);   // 45 → 60
-  const paddingTop = Math.floor(120 * scale);    // 90 → 120
-  const paddingBottom = Math.floor(120 * scale); // 90 → 120
+  const paddingLeft = Math.floor(140 * scale);   // Y軸ラベル用に左を広めに
+  const paddingRight = Math.floor(140 * scale);  // 中央配置のため左と同じ
+  const paddingTop = Math.floor(120 * scale);
+  const paddingBottom = Math.floor(120 * scale);
   const gridWidth = canvas.width - paddingLeft - paddingRight;
   const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
@@ -224,7 +224,7 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   ctx.textBaseline = 'middle';
   for(let s = 1; s <= 5; s++){
     const y = paddingTop + (5 - s) * cellHeight + cellHeight / 2;
-    ctx.fillText(`${s}点`, paddingLeft - paddingLeft * 0.2, y);
+    ctx.fillText(`${s}点`, paddingLeft - paddingLeft * 0.15, y);
   }
   
   // Draw axis titles
@@ -233,8 +233,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   ctx.textAlign = 'center';
   ctx.fillText('時刻', canvas.width / 2, canvas.height - paddingBottom * 0.3);
   
+  // Y-axis title (rotated) - 左端に配置、Y軸ラベルと重ならないように
   ctx.save();
-  ctx.translate(30, canvas.height / 2);
+  ctx.translate(paddingLeft * 0.25, canvas.height / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.fillText('評価値', 0, 0);
