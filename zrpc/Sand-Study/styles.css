@@ -368,8 +368,6 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 #charts canvas{
   display: block;
   margin: 0 auto;
-  width: 100%;
-  height: auto;
   max-width: 3000px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;

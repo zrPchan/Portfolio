@@ -86,6 +86,8 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   canvas.width = size.width;
   canvas.height = size.height;
   
+  console.log(`[${canvasId}] Canvas size set to:`, size.width, 'x', size.height, '| Window width:', window.innerWidth);
+  
   const ctx = canvas.getContext('2d');
   
   // Validate freqData
