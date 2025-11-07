@@ -1,15 +1,21 @@
 // history.js - aggregate localStorage data and render heatmaps using Canvas API
 
-// Responsive canvas sizing
+// Responsive canvas sizing - グリッドを正方形に
 function getResponsiveCanvasSize(){
   const containerWidth = Math.min(window.innerWidth - 40, 3000); // 最大3000px、左右20pxマージン
   const isMobile = window.innerWidth < 768;
   
-  if(isMobile){
-    return { width: containerWidth, height: Math.floor(containerWidth * 0.5) }; // モバイル: 2:1
-  } else {
-    return { width: containerWidth, height: Math.floor(containerWidth * 0.33) }; // PC: 3:1
-  }
+  // グリッドは24時間×5段階 = 24:5の比率
+  // 正方形セルにするため、パディングを考慮して高さを計算
+  // パディング左120 + 右60 = 180px、上120 + 下120 = 240px
+  const scale = containerWidth / 1800;
+  const paddingH = Math.floor((120 + 60) * scale); // 左右合計
+  const paddingV = Math.floor((120 + 120) * scale); // 上下合計
+  const gridWidth = containerWidth - paddingH;
+  const gridHeight = gridWidth * 5 / 24; // 正方形セルにするための高さ
+  const totalHeight = Math.floor(gridHeight + paddingV);
+  
+  return { width: containerWidth, height: totalHeight };
 }
 
 function keyTasksForDay(day){ return `tasks:${day}`; }
@@ -116,14 +122,14 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Responsive padding based on canvas size
+  // Responsive padding based on canvas size - より大きく
   const isMobile = canvas.width < 768;
   const scale = canvas.width / 1800; // スケール係数
   
-  const paddingLeft = Math.floor(90 * scale);
-  const paddingRight = Math.floor(45 * scale);
-  const paddingTop = Math.floor(90 * scale);
-  const paddingBottom = Math.floor(90 * scale);
+  const paddingLeft = Math.floor(120 * scale);   // 90 → 120
+  const paddingRight = Math.floor(60 * scale);   // 45 → 60
+  const paddingTop = Math.floor(120 * scale);    // 90 → 120
+  const paddingBottom = Math.floor(120 * scale); // 90 → 120
   const gridWidth = canvas.width - paddingLeft - paddingRight;
   const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
@@ -153,13 +159,13 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
     return 'rgba(239, 68, 68, 0.85)';
   };
   
-  // Responsive font sizes
+  // Responsive font sizes - より大きく見やすく
   const fontSize = {
-    title: Math.floor(28 * scale),
-    cellText: Math.floor(20 * scale),
-    axisLabel: Math.floor(18 * scale),
-    yAxisLabel: Math.floor(20 * scale),
-    axisTitle: Math.floor(22 * scale)
+    title: Math.floor(36 * scale),      // 28 → 36
+    cellText: Math.floor(28 * scale),   // 20 → 28
+    axisLabel: Math.floor(24 * scale),  // 18 → 24
+    yAxisLabel: Math.floor(28 * scale), // 20 → 28
+    axisTitle: Math.floor(30 * scale)   // 22 → 30
   };
   
   // Draw title
@@ -353,4 +359,21 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 
   document.getElementById('drawBtn').addEventListener('click', renderAll);
+  
+  // 初期描画を実行
+  renderAll();
+  
+  // Add resize listener for responsive canvas
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      // Re-render charts if they exist
+      const moodCanvas = document.getElementById('moodChart');
+      const effortCanvas = document.getElementById('effortChart');
+      if(moodCanvas && moodCanvas.width > 0){
+        renderAll();
+      }
+    }, 250); // Debounce to avoid too many re-renders
+  });
 });
