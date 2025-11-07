@@ -60,39 +60,69 @@ function aggregateHourly(entries){
   return {avgMood, avgEff, counts, dailyHourlyMoodFreq, dailyHourlyEffFreq};
 }
 
-function renderChart(canvasId, label, data, heatmapData, startDate, endDate){
+function renderChart(canvasId, label, data, freqData, startDate, endDate){
   const canvas = document.getElementById(canvasId);
   if(!canvas){ console.warn('Canvas not found', canvasId); return; }
   const ctx = canvas.getContext('2d');
   if(window[canvasId+'Chart']){ try{ window[canvasId+'Chart'].destroy(); }catch(e){} }
   
-  // Create heatmap data: x=hour (0-23), y=day, value=average
+  // Create heatmap data: x=hour (0-23), y=day, color=most frequent score
   const days = dateRange(startDate, endDate);
   const heatData = [];
+  
+  // Find max frequency for color scaling
+  let maxFreq = 0;
+  Object.values(freqData).forEach(hourData => {
+    Object.values(hourData).forEach(count => {
+      if(count > maxFreq) maxFreq = count;
+    });
+  });
   
   days.forEach((day, dayIndex) => {
     for(let hour = 0; hour < 24; hour++){
       const key = `${day}:${hour}`;
-      const values = heatmapData[key];
-      if(values && values.length > 0){
-        const avg = values.reduce((a,b)=>a+b,0) / values.length;
+      const freq = freqData[key];
+      if(freq && Object.keys(freq).length > 0){
+        // Find most frequent score
+        let mostFreqScore = null;
+        let mostFreqCount = 0;
+        Object.entries(freq).forEach(([score, count]) => {
+          if(count > mostFreqCount){
+            mostFreqCount = count;
+            mostFreqScore = parseInt(score);
+          }
+        });
+        
         heatData.push({
           x: hour,
           y: dayIndex,
-          v: avg.toFixed(2)
+          score: mostFreqScore,
+          count: mostFreqCount,
+          total: Object.values(freq).reduce((a,b)=>a+b,0)
         });
       }
     }
   });
   
-  // Color scale: low (blue) -> high (red)
-  const getColor = (value) => {
-    if(!value) return 'rgba(200,200,200,0.1)';
-    const v = parseFloat(value);
-    // Assuming scale 1-5
-    const ratio = (v - 1) / 4; // normalize to 0-1
-    const hue = (1 - ratio) * 240; // 240=blue, 0=red
-    return `hsla(${hue}, 70%, 50%, 0.7)`;
+  // Fine-grained color scale based on score (1-5) with vibrancy based on frequency
+  const getColor = (score, count, maxCount) => {
+    if(!score) return 'rgba(200,200,200,0.1)';
+    
+    // Base color by score: 1=deep blue, 2=light blue, 3=yellow, 4=orange, 5=deep red
+    const colorMap = {
+      1: [59, 130, 246],   // blue
+      2: [96, 165, 250],   // light blue
+      3: [250, 204, 21],   // yellow
+      4: [251, 146, 60],   // orange
+      5: [239, 68, 68]     // red
+    };
+    
+    const [r, g, b] = colorMap[score] || [150, 150, 150];
+    
+    // Opacity based on frequency (more frequent = more opaque)
+    const opacity = 0.4 + (count / maxCount) * 0.6; // 0.4 to 1.0
+    
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
   
   window[canvasId+'Chart'] = new Chart(ctx, {
@@ -103,11 +133,13 @@ function renderChart(canvasId, label, data, heatmapData, startDate, endDate){
         data: heatData.map(d => ({
           x: d.x,
           y: d.y,
-          r: 15, // bubble radius
-          value: d.v
+          r: 8 + (d.count / maxFreq) * 12, // radius 8-20 based on frequency
+          score: d.score,
+          count: d.count,
+          total: d.total
         })),
-        backgroundColor: heatData.map(d => getColor(d.v)),
-        borderColor: 'rgba(0,0,0,0.2)',
+        backgroundColor: heatData.map(d => getColor(d.score, d.count, maxFreq)),
+        borderColor: 'rgba(0,0,0,0.3)',
         borderWidth: 1
       }]
     },
@@ -115,17 +147,19 @@ function renderChart(canvasId, label, data, heatmapData, startDate, endDate){
       scales: {
         x: {
           type: 'linear',
-          min: 0,
-          max: 23,
-          ticks: { stepSize: 1, callback: (v) => `${v}:00` },
-          title: { display: true, text: '時刻' }
+          min: -0.5,
+          max: 23.5,
+          ticks: { stepSize: 1, callback: (v) => Number.isInteger(v) ? `${v}:00` : '' },
+          title: { display: true, text: '時刻', font: { size: 14 } },
+          grid: { color: 'rgba(200,200,200,0.2)' }
         },
         y: {
           type: 'linear',
           min: -0.5,
           max: days.length - 0.5,
-          ticks: { stepSize: 1, callback: (v) => days[Math.floor(v)] || '' },
-          title: { display: true, text: '日付' }
+          ticks: { stepSize: 1, callback: (v) => Number.isInteger(v) ? (days[v] || '') : '' },
+          title: { display: true, text: '日付', font: { size: 14 } },
+          grid: { color: 'rgba(200,200,200,0.2)' }
         }
       },
       plugins: {
@@ -134,7 +168,12 @@ function renderChart(canvasId, label, data, heatmapData, startDate, endDate){
           callbacks: {
             label: (ctx) => {
               const point = ctx.raw;
-              return `${label}: ${point.value} (${point.x}:00, ${days[point.y]})`;
+              return [
+                `最頻値: ${point.score}`,
+                `出現回数: ${point.count}/${point.total}`,
+                `時刻: ${point.x}:00`,
+                `日付: ${days[point.y]}`
+              ];
             }
           }
         }
@@ -196,8 +235,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
       return;
     }
     const agg = aggregateHourly(entries);
-    renderChart('moodChart','平均 mood', agg.avgMood.map(v=> v===null? null: Number(v.toFixed(2))), agg.dailyHourlyMood, s, e);
-    renderChart('effortChart','平均 effort', agg.avgEff.map(v=> v===null? null: Number(v.toFixed(2))), agg.dailyHourlyEff, s, e);
+    renderChart('moodChart','Mood 頻度', agg.avgMood.map(v=> v===null? null: Number(v.toFixed(2))), agg.dailyHourlyMoodFreq, s, e);
+    renderChart('effortChart','Effort 頻度', agg.avgEff.map(v=> v===null? null: Number(v.toFixed(2))), agg.dailyHourlyEffFreq, s, e);
     renderBottleList(s,e);
     // attach csv export
     document.getElementById('exportCsv').onclick = ()=> exportCsv(entries);
