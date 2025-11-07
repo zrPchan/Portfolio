@@ -440,6 +440,10 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .debug-panel .grid-row .row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
 .debug-panel #addDebugLog{padding:8px 14px;background:#3b82f6;color:white;border:none;border-radius:6px}
 .debug-panel #debugStatus{margin-top:6px;color:#666}
+
+/* Heading utilities for test-heatmap page */
+.page-subtitle{text-align:center;margin-top:6px;color:var(--muted)}
+.section-heading{ text-align:center;font-weight:700;margin-bottom:8px }
 #logs h4{text-align:center;margin-top:8px}
 
 /* Truncate warning actions (used in modal) */

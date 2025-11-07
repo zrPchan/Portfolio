@@ -56,17 +56,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>🎯 ヒートマップ中央配置テスト</h1>
-    
-    <div class="info">
-      <strong>目的:</strong> グリッドが完全に中央配置されているか確認<br>
-      <strong>確認ポイント:</strong> 
-      <ul>
-        <li>グリッドの左右に同じ幅の余白があるか</li>
-        <li>Y軸ラベルが左側の余白内に収まっているか</li>
-        <li>「評価値」タイトルが見えるか</li>
-      </ul>
-    </div>
+    <h1>履歴と分析</h1>
+  <p class="text-muted page-subtitle">日別の履歴とヒートマップによる分析を表示します。</p>
 
     <div class="history-controls text-center mt-8">
       <label>開始日 <input id="startDate" type="date"></label>
@@ -106,8 +97,9 @@
       </div>
     </details>
 
-    <!-- 日別の瓶一覧（history.js が #bottleList に描画します） -->
-    <section id="bottleList" class="bottle-list container-720 mt-12"></section>
+  <!-- 日別の瓶一覧（history.js が #bottleList に描画します） -->
+  <h2 class="mt-12 section-heading">日別の瓶一覧</h2>
+  <section id="bottleList" class="bottle-list container-720 mt-0"></section>
 
     <!-- ヒートマップ: 日別一覧の下に2つ配置 -->
     <div class="canvas-wrapper">
