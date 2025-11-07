@@ -358,7 +358,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .mt-16{ margin-top:16px }
 .mt-18{ margin-top:18px }
 .container-720{ max-width:720px; margin:18px auto }
-.container-heatmap{ max-width:1200px; margin:18px auto; padding: 0 20px; }
+.container-heatmap{ max-width:1800px; margin:18px auto; padding: 0 20px; }
 
 /* Heatmap canvas styling */
 #charts canvas{

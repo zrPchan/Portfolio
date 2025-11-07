@@ -99,11 +99,11 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Canvas dimensions and layout - PC optimized
-  const paddingLeft = 60;
-  const paddingRight = 30;
-  const paddingTop = 60;
-  const paddingBottom = 60;
+  // Canvas dimensions and layout - Extra large for PC
+  const paddingLeft = 90;
+  const paddingRight = 45;
+  const paddingTop = 90;
+  const paddingBottom = 90;
   const gridWidth = canvas.width - paddingLeft - paddingRight;
   const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
@@ -135,9 +135,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   
   // Draw title
   ctx.fillStyle = '#1f2937';
-  ctx.font = 'bold 20px sans-serif';
+  ctx.font = 'bold 28px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, 35);
+  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, 50);
   
   // Draw heatmap cells
   for(let hour = 0; hour < 24; hour++){
@@ -156,13 +156,13 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       
       // Draw border
       ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 1;
       ctx.strokeRect(x, y, cellWidth - 1, cellHeight - 1);
       
       // Draw count text if significant
       if(count > 0 && cellWidth > 30){
         ctx.fillStyle = clampedDev > 60 ? 'white' : '#374151';
-        ctx.font = 'bold 13px sans-serif';
+        ctx.font = 'bold 20px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(count.toString(), x + cellWidth / 2, y + cellHeight / 2);
@@ -172,31 +172,31 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   
   // Draw X-axis labels (hours)
   ctx.fillStyle = '#6b7280';
-  ctx.font = '13px sans-serif';
+  ctx.font = '18px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   for(let h = 0; h <= 23; h += 2){
     const x = paddingLeft + h * cellWidth + cellWidth / 2;
-    ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + 15);
+    ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + 20);
   }
   
   // Draw Y-axis labels (scores)
-  ctx.font = '14px sans-serif';
+  ctx.font = '20px sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for(let s = 1; s <= 5; s++){
     const y = paddingTop + (5 - s) * cellHeight + cellHeight / 2;
-    ctx.fillText(`${s}点`, paddingLeft - 15, y);
+    ctx.fillText(`${s}点`, paddingLeft - 20, y);
   }
   
   // Draw axis titles
-  ctx.font = 'bold 15px sans-serif';
+  ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = '#374151';
   ctx.textAlign = 'center';
-  ctx.fillText('時刻', canvas.width / 2, canvas.height - 20);
+  ctx.fillText('時刻', canvas.width / 2, canvas.height - 30);
   
   ctx.save();
-  ctx.translate(20, canvas.height / 2);
+  ctx.translate(30, canvas.height / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.fillText('評価値', 0, 0);
