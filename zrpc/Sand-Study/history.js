@@ -99,10 +99,13 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const variance = allCounts.length > 0 ? allCounts.reduce((a,b)=>a+Math.pow(b-mean,2),0) / allCounts.length : 1;
   const stdDev = Math.sqrt(variance);
   
-  // Canvas dimensions and layout
-  const padding = 60;
-  const gridWidth = canvas.width - padding * 2;
-  const gridHeight = canvas.height - padding * 2;
+  // Canvas dimensions and layout - PC optimized
+  const paddingLeft = 60;
+  const paddingRight = 30;
+  const paddingTop = 60;
+  const paddingBottom = 60;
+  const gridWidth = canvas.width - paddingLeft - paddingRight;
+  const gridHeight = canvas.height - paddingTop - paddingBottom;
   const cellWidth = gridWidth / 24;
   const cellHeight = gridHeight / 5;
   
@@ -132,9 +135,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   
   // Draw title
   ctx.fillStyle = '#1f2937';
-  ctx.font = 'bold 16px sans-serif';
+  ctx.font = 'bold 20px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, 30);
+  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, 35);
   
   // Draw heatmap cells
   for(let hour = 0; hour < 24; hour++){
@@ -145,8 +148,8 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       const deviation = count > 0 && stdDev > 0 ? 50 + 10 * (count - mean) / stdDev : (count > 0 ? 50 : 0);
       const clampedDev = Math.max(0, Math.min(100, deviation));
       
-      const x = padding + hour * cellWidth;
-      const y = padding + (5 - scoreVal) * cellHeight; // invert Y axis (5 at top, 1 at bottom)
+      const x = paddingLeft + hour * cellWidth;
+      const y = paddingTop + (5 - scoreVal) * cellHeight; // invert Y axis (5 at top, 1 at bottom)
       
       ctx.fillStyle = getColor(clampedDev);
       ctx.fillRect(x, y, cellWidth - 1, cellHeight - 1);
@@ -157,9 +160,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       ctx.strokeRect(x, y, cellWidth - 1, cellHeight - 1);
       
       // Draw count text if significant
-      if(count > 0 && cellWidth > 20){
+      if(count > 0 && cellWidth > 30){
         ctx.fillStyle = clampedDev > 60 ? 'white' : '#374151';
-        ctx.font = '10px sans-serif';
+        ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(count.toString(), x + cellWidth / 2, y + cellHeight / 2);
@@ -169,30 +172,31 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   
   // Draw X-axis labels (hours)
   ctx.fillStyle = '#6b7280';
-  ctx.font = '11px sans-serif';
+  ctx.font = '13px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   for(let h = 0; h <= 23; h += 2){
-    const x = padding + h * cellWidth + cellWidth / 2;
-    ctx.fillText(`${h}時`, x, canvas.height - padding + 10);
+    const x = paddingLeft + h * cellWidth + cellWidth / 2;
+    ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + 15);
   }
   
   // Draw Y-axis labels (scores)
+  ctx.font = '14px sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for(let s = 1; s <= 5; s++){
-    const y = padding + (5 - s) * cellHeight + cellHeight / 2;
-    ctx.fillText(`${s}点`, padding - 10, y);
+    const y = paddingTop + (5 - s) * cellHeight + cellHeight / 2;
+    ctx.fillText(`${s}点`, paddingLeft - 15, y);
   }
   
   // Draw axis titles
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 15px sans-serif';
   ctx.fillStyle = '#374151';
   ctx.textAlign = 'center';
-  ctx.fillText('時刻', canvas.width / 2, canvas.height - 15);
+  ctx.fillText('時刻', canvas.width / 2, canvas.height - 20);
   
   ctx.save();
-  ctx.translate(15, canvas.height / 2);
+  ctx.translate(20, canvas.height / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.fillText('評価値', 0, 0);

@@ -358,6 +358,19 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .mt-16{ margin-top:16px }
 .mt-18{ margin-top:18px }
 .container-720{ max-width:720px; margin:18px auto }
+.container-heatmap{ max-width:1200px; margin:18px auto; padding: 0 20px; }
+
+/* Heatmap canvas styling */
+#charts canvas{
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: white;
+}
+
 .muted{ color:var(--muted) }
 .text-muted{ color:var(--text-strong) }
 .overlay[aria-hidden="false"]{display:flex}
@@ -432,6 +445,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 @media (max-width:600px){
   body{margin:12px}
   .container-720{max-width:92%;margin:12px auto}
+  .container-heatmap{max-width:100%;padding:0 10px}
   .bottle{width:130px;height:210px}
   .circle-wrap{width:132px;height:132px}
   .countdown-text{font-size:18px}
