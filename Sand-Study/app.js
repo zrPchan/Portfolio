@@ -93,8 +93,8 @@ function isDevMode(){
 const DEV = isDevMode();
 function setDevMode(flag){ try{ localStorage.setItem('dev', flag ? '1' : '0'); }catch(e){} window.location.reload(); }
 window.setDevMode = setDevMode; // exposed for quick toggling
-// expose DEV flag for debugging
-try{ window.__DEV__ = DEV; }catch(e){}
+// expose DEV flag for debugging (both __DEV__ and DEV globals)
+try{ window.__DEV__ = DEV; window.DEV = DEV; }catch(e){}
 
 function showUpgradePrompt(){
   // Simple prompt for now — will be replaced by payment flow
