@@ -86,13 +86,17 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const size = getResponsiveCanvasSize();
   canvas.width = size.width;
 
-  // Compute scale/paddings based on width (match test-heatmap logic)
+  // Compute scale/paddings based on width
   const scale = canvas.width / 1800;
   const isMobile = canvas.width < 768;
   const yAxisLabelSpace = Math.floor(90 * scale);
   const visualPadding = Math.floor(50 * scale);
-  const paddingLeft = yAxisLabelSpace + visualPadding;
-  const paddingRight = paddingLeft; // symmetric
+  
+  // 対称的なパディングでグリッドを真ん中に配置
+  // 左側にY軸ラベルスペースがあるので、右側も同じだけ空ける
+  const symmetricPadding = yAxisLabelSpace + visualPadding;
+  const paddingLeft = symmetricPadding;
+  const paddingRight = symmetricPadding;
   const paddingTop = Math.floor(100 * scale);
   const paddingBottom = Math.floor(100 * scale);
 
@@ -103,6 +107,10 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   const cellHeight = gridHeight / 5;
   const totalHeight = Math.max(120, gridHeight + paddingTop + paddingBottom);
   canvas.height = totalHeight;
+  
+  // グリッド開始位置を計算（canvas の中心にグリッドの中心を合わせる）
+  const gridCenterX = canvas.width / 2;
+  const gridStartX = gridCenterX - gridWidth / 2;
 
   console.log(`[${canvasId}] Canvas size set to:`, canvas.width, 'x', canvas.height, '| Window width:', window.innerWidth, 'paddings L/R/T/B', paddingLeft, paddingRight, paddingTop, paddingBottom);
 
@@ -145,11 +153,11 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   // Responsive padding based on canvas size - グリッドを視覚的に中央配置
   
   // Use paddings and grid sizes computed earlier
-  console.log(`[${canvasId}] Padding - Left: ${paddingLeft}, Right: ${paddingRight}, Grid starts at: ${paddingLeft}, Canvas width: ${canvas.width}`);
+  console.log(`[${canvasId}] Padding - Left: ${paddingLeft}, Right: ${paddingRight}, Grid starts at: ${gridStartX}, Canvas width: ${canvas.width}`);
 
   // Draw grid background for visual debugging (optional)
   ctx.fillStyle = '#f9fafb';
-  ctx.fillRect(paddingLeft, paddingTop, gridWidth, gridHeight);
+  ctx.fillRect(gridStartX, paddingTop, gridWidth, gridHeight);
   
   // Color scale based on deviation score
   const getColor = (deviation) => {
@@ -199,7 +207,7 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       const deviation = count > 0 && stdDev > 0 ? 50 + 10 * (count - mean) / stdDev : (count > 0 ? 50 : 0);
       const clampedDev = Math.max(0, Math.min(100, deviation));
       
-      const x = paddingLeft + hour * cellWidth;
+      const x = gridStartX + hour * cellWidth;
       const y = paddingTop + (5 - scoreVal) * cellHeight; // invert Y axis (5 at top, 1 at bottom)
       
       ctx.fillStyle = getColor(clampedDev);
@@ -228,18 +236,17 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   for(let h = 0; h <= 23; h += 2){
-    const x = paddingLeft + h * cellWidth + cellWidth / 2;
+    const x = gridStartX + h * cellWidth + cellWidth / 2;
     ctx.fillText(`${h}時`, x, canvas.height - paddingBottom + paddingBottom * 0.2);
   }
   
-  // Draw Y-axis labels (scores) - 左側に配置してグリッドとの距離を確保
+  // Draw Y-axis labels (scores) - canvasの左端基準で配置
   ctx.font = `${fontSize.yAxisLabel}px sans-serif`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for(let s = 1; s <= 5; s++){
     const y = paddingTop + (5 - s) * cellHeight + cellHeight / 2;
-    // Y軸ラベルをグリッドから離して左側に配置（グリッド開始位置から少し左）
-    ctx.fillText(`${s}点`, paddingLeft - visualPadding * 0.4, y);
+    ctx.fillText(`${s}点`, Math.max(0, paddingLeft - visualPadding * 0.4), y);
   }
   
   // Draw axis titles
@@ -248,9 +255,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
   ctx.textAlign = 'center';
   ctx.fillText('時刻', canvas.width / 2, canvas.height - paddingBottom * 0.3);
   
-  // Y-axis title (rotated) - 一番左端に配置
+  // Y-axis title (rotated) - canvasの左端に配置
   ctx.save();
-  ctx.translate(visualPadding * 0.5, canvas.height / 2);
+  ctx.translate(24, canvas.height / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.fillText('評価値', 0, 0);
