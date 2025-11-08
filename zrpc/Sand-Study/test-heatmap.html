@@ -226,18 +226,16 @@
   <section id="bottleList" class="bottle-list container-720 mt-0"></section>
 
     <!-- ヒートマップ: 日別一覧の下に2つ配置 -->
+    <!-- Main heading moved to the top of the heatmap area -->
+    <h2 class="heatmap-main-title">頻度ヒートマップ</h2>
     <div class="canvas-wrapper">
       <section id="charts" class="container-heatmap">
-        <!-- Main heading that groups both heatmaps -->
-        <h2 class="heatmap-main-title">頻度ヒートマップ</h2>
         <div class="heatmaps">
           <div class="heatmap-card">
             <!-- Each graph keeps its own subheading -->
-            <h3 class="heatmap-title">Mood 頻度</h3>
             <canvas id="moodChart" aria-label="Mood heatmap"></canvas>
           </div>
           <div class="heatmap-card">
-            <h3 class="heatmap-title">Effort 頻度</h3>
             <canvas id="effortChart" aria-label="Effort heatmap"></canvas>
           </div>
         </div>
