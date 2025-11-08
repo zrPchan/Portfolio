@@ -906,13 +906,13 @@ try{
 // --- Theme picker: palettes (basic / solid × sand, red, blue, green, pink, silver)
 const THEME_KEY = 'uiTheme:v1';
 const THEMES = [
-  // Basic
-  {id:'sand', name:'Sand', c1:'#fffaf5', c2:'#fff6ec'},
-  {id:'red', name:'Red', c1:'#fff6f6', c2:'#fff1f1'},
-  {id:'blue', name:'Blue', c1:'#f6fbff', c2:'#eef7ff'},
-  {id:'green', name:'Green', c1:'#f6fff6', c2:'#f0fff0'},
-  {id:'pink', name:'Pink', c1:'#fff7fb', c2:'#fff2f8'},
-  {id:'silver', name:'Silver', c1:'#f7f8fa', c2:'#eef0f3'}
+  // Basic themes with unlock levels (0 = unlocked by default)
+  {id:'sand', name:'Sand', c1:'#fffaf5', c2:'#fff6ec', unlock:0},
+  {id:'red', name:'Red', c1:'#fff6f6', c2:'#fff1f1', unlock:3},
+  {id:'blue', name:'Blue', c1:'#f6fbff', c2:'#eef7ff', unlock:5},
+  {id:'green', name:'Green', c1:'#f6fff6', c2:'#f0fff0', unlock:7},
+  {id:'pink', name:'Pink', c1:'#fff7fb', c2:'#fff2f8', unlock:10},
+  {id:'silver', name:'Silver', c1:'#f7f8fa', c2:'#eef0f3', unlock:12}
 ];
 
 function applyThemeId(id){
@@ -937,8 +937,19 @@ function applyThemeId(id){
 
 function renderThemeGrid(){
   const grid = document.getElementById('themeGrid'); if(!grid) return;
+  // determine current user level (read from UI if available)
+  let level = 0;
+  try{
+    const lvlEl = document.getElementById('level');
+    if(lvlEl) level = Number((lvlEl.textContent || '0').trim()) || 0;
+  }catch(e){ level = 0; }
+
   grid.innerHTML = THEMES.map(t => {
-    return `<button class="theme-swatch" data-theme="${t.id}" type="button" title="${t.name}"><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}</div></button>`;
+    const locked = (t.unlock || 0) > level;
+    const lockAttr = locked ? ` data-unlock="${t.unlock}"` : '';
+    const lockClass = locked ? ' locked' : '';
+    const aria = locked ? ` aria-disabled="true" title="Lv ${t.unlock} で解放されます"` : ` title="${t.name}"`;
+    return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${lockAttr}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
   }).join('');
 }
 
@@ -967,7 +978,7 @@ function closeThemes(){
 try{
   const themeOpen = document.getElementById('themeOpenBtn'); if(themeOpen) themeOpen.addEventListener('click', ()=>{ openThemes(); });
   const themeClose = document.getElementById('themeCloseBtn'); if(themeClose) themeClose.addEventListener('click', ()=>{ closeThemes(); });
-  const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(id){ applyThemeId(id); closeThemes(); } }); }
+  const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(!id) return; try{ const themeObj = THEMES.find(x=>x.id===id); const lvlEl = document.getElementById('level'); const cur = lvlEl ? Number((lvlEl.textContent||'0').trim())||0 : 0; if(themeObj && (themeObj.unlock||0) > cur){ try{ showToast(`Lv ${themeObj.unlock} で解放されます`); }catch(e){} return; } }catch(e){} if(id){ applyThemeId(id); closeThemes(); } }); }
 }catch(e){/* ignore binding errors */}
 
 // Apply saved theme on load (or default to 'sand')
