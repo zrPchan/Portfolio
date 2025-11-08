@@ -73,10 +73,18 @@ function isDevMode(){
     if(localStorage.getItem('dev') === '1') return true;
     if(localStorage.getItem('dev') === '0') return false;
   }catch(e){}
-  // common heuristics: localhost or URL flag ?dev=1
+  // common heuristics: localhost, URL flag (?dev=1 or ?dev=true or ?debug=1), or hash (#dev)
   try{
-    if(location && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) return true;
-    if(location && location.search && location.search.indexOf('dev=1') !== -1) return true;
+    if(location){
+      const host = (location.hostname || '').toLowerCase();
+      if(host === 'localhost' || host === '127.0.0.1') return true;
+      const qs = location.search || '';
+      // support ?dev=1, ?dev=true, ?debug=1
+      if(/([?&])(dev=(1|true)|debug=1)($|&)/i.test(qs)) return true;
+      // support hash flag like #dev or #dev=1
+      const hash = (location.hash || '').toLowerCase();
+      if(hash.indexOf('dev') !== -1) return true;
+    }
   }catch(e){}
   return false;
 }

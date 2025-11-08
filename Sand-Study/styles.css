@@ -529,6 +529,9 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .debug-panel #addDebugLog{padding:8px 14px;background:#3b82f6;color:white;border:none;border-radius:6px}
 .debug-panel #debugStatus{margin-top:6px;color:#666}
 
+/* Legacy inline style variant used on old_history.html; kept for visual parity */
+.debug-panel.legacy{max-width:600px;margin:20px auto;padding:16px;border-radius:8px;background:rgba(59,130,246,0.1)}
+
 /* Heading utilities for test-heatmap page */
 .page-subtitle{text-align:center;margin-top:6px;color:var(--muted)}
 .section-heading{ text-align:center;font-weight:700;margin-bottom:8px }
