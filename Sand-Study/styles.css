@@ -404,9 +404,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .date-range-controls .preset-wrap{ display:flex; gap:8px }
 .preset-btn{ padding:6px 10px; border-radius:8px; border:1px solid var(--border); background:linear-gradient(180deg,#ffffff,#fbfbfb); cursor:pointer; font-weight:600 }
 .preset-btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,0.04) }
-.date-range-label{ color:var(--muted); font-weight:600; margin-left:8px }
-
-@media (max-width:600px){ .date-range-controls{ flex-direction:column; align-items:flex-start } }
+.@media (max-width:600px){ .date-range-controls{ flex-direction:column; align-items:flex-start } }
 .container-heatmap{
   max-width: 3000px;
   margin: 18px auto;

@@ -437,15 +437,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
       btnWrap.appendChild(b);
     });
 
-    const rangeLabel = document.createElement('div'); rangeLabel.id='dateRangeLabel'; rangeLabel.className='date-range-label';
-    const updateLabel = ()=>{ const s=startEl.value||''; const e=endEl.value||''; rangeLabel.textContent = s && e ? `${s} 〜 ${e}` : (s||e||'範囲を選択'); };
-    // update when inputs change
-    startEl.addEventListener('change', updateLabel);
-    endEl.addEventListener('change', updateLabel);
-    updateLabel();
 
-    container.appendChild(btnWrap);
-    container.appendChild(rangeLabel);
+  container.appendChild(btnWrap);
 
     // insert container before the draw button if present, otherwise before export
     const drawBtn = document.getElementById('drawBtn');
