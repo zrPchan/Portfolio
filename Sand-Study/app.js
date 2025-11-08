@@ -81,9 +81,9 @@ function isDevMode(){
       const qs = location.search || '';
       // support ?dev=1, ?dev=true, ?debug=1
       if(/([?&])(dev=(1|true)|debug=1)($|&)/i.test(qs)) return true;
-      // support hash flag like #dev or #dev=1
-      const hash = (location.hash || '').toLowerCase();
-      if(hash.indexOf('dev') !== -1) return true;
+  // support hash flag like #dev or #dev=1 or #dev=true (match exact token to avoid accidental matches)
+  const hash = (location.hash || '').toLowerCase();
+  if(/^#dev(?:=(1|true))?$/i.test(hash)) return true;
     }
   }catch(e){}
   return false;
