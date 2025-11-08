@@ -511,44 +511,27 @@ document.addEventListener('DOMContentLoaded', ()=>{
   
   // デバッグ用ログ追加機能
   const debugDateEl = document.getElementById('debugDate');
-  (function addDateRangeControls(){
+  (function bindPresetButtons(){
     if(!startEl || !endEl) return;
-    if(document.getElementById('dateRangeControls')) return; // 既に追加済み
-
-    const container = document.createElement('div');
-    container.id = 'dateRangeControls';
-    container.className = 'date-range-controls';
-
     const presets = [
-      {id:'p-today', label:'今日', fn:()=>({s: today, e: today})},
-  {id:'p-yesterday', label:'昨日', fn:()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=localDateString(d); return {s,e:s}; }},
-  {id:'p-7', label:'過去7日', fn:()=>{ const e=new Date(); const s=new Date(); s.setDate(s.getDate()-6); return {s: localDateString(s), e: localDateString(e)} }},
-  {id:'p-week', label:'今週', fn:()=>{ const now=new Date(); const dow=now.getDay(); const s=new Date(now); s.setDate(s.getDate() - dow + (dow===0? -6:1)); const e=new Date(s); e.setDate(s.getDate()+6); return {s: localDateString(s), e: localDateString(e)} }},
-  {id:'p-month', label:'今月', fn:()=>{ const now=new Date(); const s=new Date(now.getFullYear(), now.getMonth(), 1); const e=new Date(now.getFullYear(), now.getMonth()+1, 0); return {s: localDateString(s), e: localDateString(e)} }},
+      {id:'p-today', fn:()=>({s: today, e: today})},
+      {id:'p-yesterday', fn:()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=localDateString(d); return {s,e:s}; }},
+      {id:'p-7', fn:()=>{ const e=new Date(); const s=new Date(); s.setDate(s.getDate()-6); return {s: localDateString(s), e: localDateString(e)} }},
+      {id:'p-week', fn:()=>{ const now=new Date(); const dow=now.getDay(); const s=new Date(now); s.setDate(s.getDate() - dow + (dow===0? -6:1)); const e=new Date(s); e.setDate(s.getDate()+6); return {s: localDateString(s), e: localDateString(e)} }},
+      {id:'p-month', fn:()=>{ const now=new Date(); const s=new Date(now.getFullYear(), now.getMonth(), 1); const e=new Date(now.getFullYear(), now.getMonth()+1, 0); return {s: localDateString(s), e: localDateString(e)} }},
     ];
-
-    const btnWrap = document.createElement('div'); btnWrap.className = 'preset-wrap';
     presets.forEach(p=>{
-      const b = document.createElement('button'); b.id = p.id; b.type='button'; b.className='preset-btn'; b.textContent = p.label;
-      b.addEventListener('click', ()=>{
-        try{
-          const r = p.fn();
-          startEl.value = r.s; endEl.value = r.e || r.s;
-          // trigger render
-          setTimeout(()=>{ if(typeof renderAll === 'function') renderAll(); }, 0);
-        }catch(err){ console.warn('preset error', err); }
-      });
-      btnWrap.appendChild(b);
+      const btn = document.getElementById(p.id);
+      if(btn){
+        btn.addEventListener('click', ()=>{
+          try{
+            const r = p.fn();
+            startEl.value = r.s; endEl.value = r.e || r.s;
+            setTimeout(()=>{ if(typeof renderAll === 'function') renderAll(); }, 0);
+          }catch(err){ console.warn('preset error', err); }
+        });
+      }
     });
-
-
-  container.appendChild(btnWrap);
-
-    // insert container before the draw button if present, otherwise before export
-    const drawBtn = document.getElementById('drawBtn');
-    const exportBtn = document.getElementById('exportCsv');
-    const insertBefore = drawBtn || exportBtn || startEl.nextSibling;
-    insertBefore.parentNode.insertBefore(container, insertBefore);
   })();
 
   // Render function - reusable for both manual draw and auto-update
@@ -583,36 +566,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const deltas = computeDailyLayerDeltas(s,e);
   renderCalendarHeatmap('calendarHeatmap', s, e, deltas);
     renderBottleList(s,e);
-    // attach csv/export controls: ensure a select dropdown exists so users can pick format
+    // attach export handler to existing export button; exportCsv reads #exportFormat select
     const exportBtn = document.getElementById('exportCsv');
-    if(exportBtn){
-      if(!document.getElementById('exportFormat')){
-        const wrapper = document.createElement('span');
-        wrapper.style.display = 'inline-flex';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.gap = '8px';
-
-        const label = document.createElement('label');
-        label.htmlFor = 'exportFormat';
-        label.textContent = '形式:';
-        label.style.fontSize = '0.9em';
-        label.style.color = '#374151';
-
-        const sel = document.createElement('select');
-        sel.id = 'exportFormat';
-        const optCsv = document.createElement('option'); optCsv.value = 'csv'; optCsv.text = 'CSV';
-        const optMd = document.createElement('option'); optMd.value = 'md'; optMd.text = 'MD';
-        sel.appendChild(optCsv); sel.appendChild(optMd);
-        sel.style.padding = '4px 6px';
-        sel.style.borderRadius = '4px';
-        sel.style.border = '1px solid #d1d5db';
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(sel);
-        exportBtn.parentNode.insertBefore(wrapper, exportBtn);
-      }
-      exportBtn.onclick = ()=> exportCsv(entries);
-    }
+    if(exportBtn){ exportBtn.onclick = ()=> exportCsv(entries); }
   }
   
   // デバッグ用ログ追加機能
