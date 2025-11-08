@@ -286,8 +286,22 @@ function renderBottleList(start,end){
 }
 
 function exportCsv(entries){
-  // Group entries by day (YYYY-MM-DD) and produce a CSV with a date header for each day.
-  // Individual rows will only include times (HH:MM) so the per-row date is hidden.
+  // Ask user which format they want: CSV or Obsidian Markdown
+  try{
+    const choice = window.prompt('Export format: type "md" for Obsidian Markdown or "csv" for CSV (default csv):', 'md');
+    if(choice && String(choice).toLowerCase().trim() === 'md'){
+      exportMarkdown(entries);
+    } else {
+      exportCsvRaw(entries);
+    }
+  }catch(e){
+    // fallback to CSV
+    exportCsvRaw(entries);
+  }
+}
+
+function exportCsvRaw(entries){
+  // previous CSV grouping behavior (date headers + start/end times)
   const byDay = {};
   for(const t of entries){
     const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
@@ -300,9 +314,7 @@ function exportCsv(entries){
   const rows = [];
   for(const day of days){
     rows.push([`Date: ${day}`]);
-    // header for this day's logs (time only for start/end)
     rows.push(['start_time','end_time','mood','effort','taskname','insight','nexttask']);
-    // sort entries by start time within the day
     const list = (byDay[day] || []).slice().sort((a,b)=> ((a.start||a.createdAt)||0) - ((b.start||b.createdAt)||0));
     for(const t of list){
       const start = new Date((t.start||t.createdAt)*1000);
@@ -311,14 +323,48 @@ function exportCsv(entries){
       const endTime = end.toISOString().slice(11,16);
       rows.push([startTime, endTime, (''+ (typeof t.mood !== 'undefined' ? t.mood : '')), (''+ (typeof t.effort !== 'undefined' ? t.effort : '')), (t.taskname||''), (t.insight||''), (t.nexttask||'')]);
     }
-    // blank separator row
     rows.push([]);
   }
-
   const csv = rows.map(r=> r.map(c=> '"'+(''+c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'sandstudy_export.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportMarkdown(entries){
+  // Group entries by day and output Markdown suitable for Obsidian daily notes
+  const byDay = {};
+  for(const t of entries){
+    const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
+    const day = new Date(ts).toISOString().slice(0,10);
+    if(!byDay[day]) byDay[day] = [];
+    byDay[day].push(t);
+  }
+  const days = Object.keys(byDay).sort();
+  const lines = [];
+  for(const day of days){
+    lines.push(`# ${day}`);
+    lines.push('');
+    lines.push('| Time | Mood | Effort | Task | Insight | Next |');
+    lines.push('|---:|:---:|:---:|:---|:---|:---|');
+    const list = (byDay[day] || []).slice().sort((a,b)=> ((a.start||a.createdAt)||0) - ((b.start||b.createdAt)||0));
+    for(const t of list){
+      const start = new Date((t.start||t.createdAt)*1000);
+      const end = new Date((t.end||t.createdAt||t.start)*1000);
+      const startTime = start.toISOString().slice(11,16);
+      const mood = (typeof t.mood !== 'undefined') ? String(t.mood) : '';
+      const effort = (typeof t.effort !== 'undefined') ? String(t.effort) : '';
+      const task = (t.taskname||'').replace(/\|/g,'\|');
+      const insight = (t.insight||'').replace(/\|/g,'\|');
+      const next = (t.nexttask||'').replace(/\|/g,'\|');
+      lines.push(`| ${startTime} | ${mood} | ${effort} | ${task} | ${insight} | ${next} |`);
+    }
+    lines.push('');
+  }
+  const md = lines.join('\n');
+  const blob = new Blob([md],{type:'text/markdown;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'sandstudy_export.md'; a.click(); URL.revokeObjectURL(url);
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
