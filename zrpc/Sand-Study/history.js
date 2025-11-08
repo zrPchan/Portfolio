@@ -192,11 +192,11 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
     axisTitle: Math.floor(30 * scale)   // 22 → 30
   };
   
-  // Draw title
-  ctx.fillStyle = '#1f2937';
-  ctx.font = `bold ${fontSize.title}px sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText(label + ' ヒートマップ', canvas.width / 2, paddingTop * 0.6);
+  // Draw title (削除)
+  // ctx.fillStyle = '#1f2937';
+  // ctx.font = `bold ${fontSize.title}px sans-serif`;
+  // ctx.textAlign = 'center';
+  // ctx.fillText(label + ' ヒートマップ', canvas.width / 2, paddingTop * 0.6);
   
   // Draw heatmap cells
   for(let hour = 0; hour < 24; hour++){
