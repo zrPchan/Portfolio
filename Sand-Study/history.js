@@ -22,13 +22,27 @@ function getResponsiveCanvasSize(){
 function keyTasksForDay(day){ return `tasks:${day}`; }
 function keyDailyForDay(day){ return `daily:${day}`; }
 
+// return local YYYY-MM-DD (use local timezone to avoid UTC offset issues)
+function localDateString(d = new Date()){ 
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function localTimeString(d = new Date()){
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${hh}:${mm}`;
+}
+
 function parseDateInput(id){ const el=document.getElementById(id); if(!el || !el.value) return null; return el.value; }
 
 function dateRange(start, end){
   const s = new Date(start);
   const e = new Date(end);
   const days = [];
-  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) days.push(new Date(d).toISOString().slice(0,10));
+  for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) days.push(localDateString(new Date(d)));
   return days;
 }
 
@@ -56,7 +70,7 @@ function aggregateHourly(entries){
     const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
     const date = new Date(ts);
     const h = date.getHours();
-    const day = date.toISOString().slice(0,10);
+  const day = localDateString(date);
     const key = `${day}:${h}`;
     
     if(typeof t.mood === 'number' || !isNaN(Number(t.mood))){ 
@@ -304,8 +318,8 @@ function exportCsvRaw(entries){
   // previous CSV grouping behavior (date headers + start/end times)
   const byDay = {};
   for(const t of entries){
-    const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
-    const day = new Date(ts).toISOString().slice(0,10);
+  const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
+  const day = localDateString(new Date(ts));
     if(!byDay[day]) byDay[day] = [];
     byDay[day].push(t);
   }
@@ -319,8 +333,8 @@ function exportCsvRaw(entries){
     for(const t of list){
       const start = new Date((t.start||t.createdAt)*1000);
       const end = new Date((t.end||t.createdAt||t.start)*1000);
-      const startTime = start.toISOString().slice(11,16);
-      const endTime = end.toISOString().slice(11,16);
+  const startTime = localTimeString(start);
+  const endTime = localTimeString(end);
       rows.push([startTime, endTime, (''+ (typeof t.mood !== 'undefined' ? t.mood : '')), (''+ (typeof t.effort !== 'undefined' ? t.effort : '')), (t.taskname||''), (t.insight||''), (t.nexttask||'')]);
     }
     rows.push([]);
@@ -336,7 +350,7 @@ function exportMarkdown(entries){
   const byDay = {};
   for(const t of entries){
     const ts = (t.start || t.createdAt || Date.now()/1000) * 1000;
-    const day = new Date(ts).toISOString().slice(0,10);
+    const day = localDateString(new Date(ts));
     if(!byDay[day]) byDay[day] = [];
     byDay[day].push(t);
   }
@@ -353,8 +367,8 @@ function exportMarkdown(entries){
     for(const t of list){
       const start = new Date((t.start||t.createdAt)*1000);
       const end = new Date((t.end||t.createdAt||t.start)*1000);
-  const startTime = start.toISOString().slice(11,16);
-  const endTime = end.toISOString().slice(11,16);
+  const startTime = localTimeString(start);
+  const endTime = localTimeString(end);
   const mood = (typeof t.mood !== 'undefined') ? String(t.mood) : '';
   const effort = (typeof t.effort !== 'undefined') ? String(t.effort) : '';
   const task = (t.taskname||'').replace(/\|/g,'\|');
@@ -371,7 +385,7 @@ function exportMarkdown(entries){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateString(new Date());
   const startEl = document.getElementById('startDate');
   const endEl = document.getElementById('endDate');
   // デフォルト: 空の場合は今日を設定する（既に値がある場合は上書きしない）
@@ -403,10 +417,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     const presets = [
       {id:'p-today', label:'今日', fn:()=>({s: today, e: today})},
-      {id:'p-yesterday', label:'昨日', fn:()=>{ const d=new Date(today); d.setDate(d.getDate()-1); const s=d.toISOString().slice(0,10); return {s,e:s}; }},
-      {id:'p-7', label:'過去7日', fn:()=>{ const e=new Date(today); const s=new Date(today); s.setDate(s.getDate()-6); return {s: s.toISOString().slice(0,10), e: e.toISOString().slice(0,10)} }},
-      {id:'p-week', label:'今週', fn:()=>{ const now=new Date(today); const dow=now.getDay(); const s=new Date(now); s.setDate(s.getDate() - dow + (dow===0? -6:1)); const e=new Date(s); e.setDate(s.getDate()+6); return {s: s.toISOString().slice(0,10), e: e.toISOString().slice(0,10)} }},
-      {id:'p-month', label:'今月', fn:()=>{ const now=new Date(today); const s=new Date(now.getFullYear(), now.getMonth(), 1); const e=new Date(now.getFullYear(), now.getMonth()+1, 0); return {s: s.toISOString().slice(0,10), e: e.toISOString().slice(0,10)} }},
+  {id:'p-yesterday', label:'昨日', fn:()=>{ const d=new Date(); d.setDate(d.getDate()-1); const s=localDateString(d); return {s,e:s}; }},
+  {id:'p-7', label:'過去7日', fn:()=>{ const e=new Date(); const s=new Date(); s.setDate(s.getDate()-6); return {s: localDateString(s), e: localDateString(e)} }},
+  {id:'p-week', label:'今週', fn:()=>{ const now=new Date(); const dow=now.getDay(); const s=new Date(now); s.setDate(s.getDate() - dow + (dow===0? -6:1)); const e=new Date(s); e.setDate(s.getDate()+6); return {s: localDateString(s), e: localDateString(e)} }},
+  {id:'p-month', label:'今月', fn:()=>{ const now=new Date(); const s=new Date(now.getFullYear(), now.getMonth(), 1); const e=new Date(now.getFullYear(), now.getMonth()+1, 0); return {s: localDateString(s), e: localDateString(e)} }},
     ];
 
     const btnWrap = document.createElement('div'); btnWrap.className = 'preset-wrap';
