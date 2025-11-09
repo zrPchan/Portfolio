@@ -1,6 +1,43 @@
 // main.js
 // Top-page login modal + Firebase email/password auth (index.html)
-document.addEventListener('DOMContentLoaded', ()=>{
+
+// Dynamically load Firebase compat SDKs and optional local config at /assets/js/firebase-config.js
+function loadScript(src){
+	return new Promise((resolve, reject)=>{
+		const s = document.createElement('script');
+		s.src = src;
+		s.async = true;
+		s.onload = ()=>resolve(s);
+		s.onerror = (e)=>reject(new Error('Failed to load '+src));
+		document.head.appendChild(s);
+	});
+}
+
+async function tryInitFirebase(){
+	if(typeof window.firebase !== 'undefined') return true;
+	try{
+		// load compat SDKs (stable recommended version)
+		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
+		// try to load local config (optional) which should set window.FIREBASE_CONFIG
+		try{
+			await loadScript('/assets/js/firebase-config.js');
+		}catch(_){
+			// no local config — that's fine, we just won't initialize automatically
+		}
+		if(window.FIREBASE_CONFIG && typeof firebase !== 'undefined'){
+			try{ firebase.initializeApp(window.FIREBASE_CONFIG); console.info('Firebase initialized from /assets/js/firebase-config.js'); return true; }catch(e){ console.warn('Firebase init failed', e); }
+		}
+	}catch(e){ console.warn('Failed to load Firebase SDKs', e); }
+	return false;
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+	// attempt background init; main auth handlers will still check for window.firebase
+	tryInitFirebase().then(ok=>{
+		if(!ok) console.info('Firebase not initialized. To enable auth, create /assets/js/firebase-config.js based on assets/js/firebase-config.example.js');
+	});
 	const btn = document.getElementById('topBtnSignIn');
 	const modal = document.getElementById('loginModal');
 	const btnClose = document.getElementById('topBtnClose');
@@ -56,7 +93,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 		});
 	}
 
-	// --- Diagnostic: top-actions visibility helper ---
+	// --- Diagnostic: top-actions visibility helper (logging only) ---
 	try{
 		const ta = document.querySelector('.top-actions');
 		if(ta){
@@ -72,35 +109,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
 				right: cs.right,
 				boundingClientRect: ta.getBoundingClientRect()
 			});
-			// Add a temporary bright outline to help visually locate it (removed after 6s)
-			const prevOutline = ta.style.outline;
-			ta.style.outline = '3px solid lime';
-			setTimeout(()=>{ ta.style.outline = prevOutline; }, 6000);
 		} else {
 			console.warn('DEBUG: .top-actions element not found in DOM');
 		}
-		// Add a temporary top-right debug badge at extremely high z-index to test stacking
-		const badge = document.createElement('div');
-		badge.id = 'top-actions-debug-badge';
-		badge.textContent = 'TOP';
-		Object.assign(badge.style, {
-			position: 'fixed',
-			top: '8px',
-			right: '8px',
-			width: '56px',
-			height: '28px',
-			lineHeight: '28px',
-			textAlign: 'center',
-			background: '#ff2d55',
-			color: '#fff',
-			fontWeight: '700',
-			borderRadius: '6px',
-			padding: '0 8px',
-			zIndex: '2147483647',
-			pointerEvents: 'none',
-			boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
-		});
-		document.body.appendChild(badge);
-		setTimeout(()=>{ const b = document.getElementById('top-actions-debug-badge'); b && b.remove(); }, 6000);
 	} catch(e){ console.warn('DEBUG: error while running top-actions diagnostic', e); }
 });
