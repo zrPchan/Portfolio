@@ -854,8 +854,10 @@ async function attemptPushRegisterIfNeeded(){
     let key = null;
     try{ const r = await fetch('/api/vapidPublicKey'); if(r.ok) key = await r.text(); }catch(_){ }
     if(!key){ try{ const r2 = await fetch('/vapidPublicKey'); if(r2.ok) key = await r2.text(); }catch(_){ } }
-    if(!key){ /* no key available; ask user via prompt as fallback */
-      try{ key = prompt('Push 用 VAPID 公開鍵を入力してください（省略すると登録は行いません）'); }catch(e){}
+    if(!key){
+      // no key available from server; do NOT prompt the user when called from Start button.
+      // Silent skip so the start flow isn't interrupted with modal prompts.
+      if(DEV) try{ console.log('No VAPID public key available; skipping push registration'); }catch(e){}
     }
     if(!key) return; // user cancelled or no key
 
