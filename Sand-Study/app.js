@@ -649,12 +649,12 @@ function render(){
   const newLevel = Math.floor((today.bottlesCum||0)/2);
   const levelEl = document.getElementById("level");
   if(levelEl) levelEl.textContent = String(newLevel);
-  // detect unlock thresholds and animate newly unlocked themes
+  // detect unlock thresholds and apply random unlocks (new system)
   try{
     const prevLevel = Number(window._lastThemeUnlockLevel || 0);
     if(newLevel > prevLevel){
-      // handle unlocks for any themes whose unlock is in (prevLevel, newLevel]
-      try{ handleThemeUnlocks(prevLevel, newLevel); }catch(e){}
+      // process any thresholds we've crossed
+      try{ checkAndApplyNewUnlocks(); }catch(e){}
     }
     window._lastThemeUnlockLevel = newLevel;
   }catch(e){ /* noop */ }
@@ -985,6 +985,102 @@ try{
 const THEME_KEY = 'uiTheme:v1';
 const BG_THEME_KEY = 'uiBgTheme:v1';
 const RING_COLOR_KEY = 'uiRingColor:v1';
+// Unlock progression state (saved in localStorage)
+const UNLOCK_STATE_KEY = 'uiUnlockState:v1';
+// thresholds at which a single random unlock occurs (can be extended)
+const UNLOCK_THRESHOLDS = [3,5,7,10,12,15,17,20,22,25];
+
+// Structure saved under UNLOCK_STATE_KEY:
+// { processedUpToLevel: number, sand: [ids], bg: [ids], ring: [ids] }
+
+function loadUnlockState(){
+  try{
+    const raw = localStorage.getItem(UNLOCK_STATE_KEY);
+    if(!raw) return { processedUpToLevel: 0, sand: ['sand'], bg: ['sand'], ring: [] };
+    return JSON.parse(raw);
+  }catch(e){ return { processedUpToLevel: 0, sand: ['sand'], bg: ['sand'], ring: [] }; }
+}
+
+function saveUnlockState(state){
+  try{ localStorage.setItem(UNLOCK_STATE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+// Utility to check if all items unlocked
+function allUnlocked(state){
+  try{
+    const total = THEMES.length;
+    return (state.sand.length >= total) && (state.bg.length >= total) && (state.ring.length >= total);
+  }catch(e){ return false; }
+}
+
+// Get current numeric level from DOM or fallback to 0
+function getCurrentLevel(){
+  try{
+    const el = document.getElementById('level');
+    if(el) return Number((el.textContent||'0').trim())||0;
+    return 0;
+  }catch(e){ return 0; }
+}
+
+// Randomly unlock one item (sand/bg/ring) from remaining locked pools
+function performRandomUnlockForThreshold(state, threshold){
+  try{
+    // build pools
+    const allIds = THEMES.map(t=>t.id);
+    const lockedSand = allIds.filter(id => state.sand.indexOf(id) === -1);
+    const lockedBg = allIds.filter(id => state.bg.indexOf(id) === -1);
+    const lockedRing = allIds.filter(id => state.ring.indexOf(id) === -1);
+    const pools = [];
+    if(lockedSand.length) pools.push({type:'sand', pool:lockedSand});
+    if(lockedBg.length) pools.push({type:'bg', pool:lockedBg});
+    if(lockedRing.length) pools.push({type:'ring', pool:lockedRing});
+    if(pools.length === 0) return state; // nothing to unlock
+    // pick a random pool, weighted equally
+    const p = pools[Math.floor(Math.random()*pools.length)];
+    const pick = p.pool[Math.floor(Math.random()*p.pool.length)];
+    if(p.type === 'sand') state.sand.push(pick);
+    else if(p.type === 'bg') state.bg.push(pick);
+    else if(p.type === 'ring') state.ring.push(pick);
+    // notify
+    try{ showToast(`Lv ${threshold} で ${p.type === 'sand' ? '砂色' : p.type === 'bg' ? '背景' : 'タイマーリング'} の「${pick}」が解放されました` , 3000); }catch(e){}
+    return state;
+  }catch(e){ console.warn('performRandomUnlockForThreshold failed', e); return state; }
+}
+
+// Process thresholds between processedUpToLevel and current level
+function checkAndApplyNewUnlocks(){
+  try{
+    const state = loadUnlockState();
+    const cur = getCurrentLevel();
+    // find thresholds > processedUpToLevel and <= cur
+    const toProcess = UNLOCK_THRESHOLDS.filter(x => x > (state.processedUpToLevel||0) && x <= cur);
+    if(toProcess.length === 0) return;
+    toProcess.forEach(th => {
+      performRandomUnlockForThreshold(state, th);
+      state.processedUpToLevel = th;
+    });
+    saveUnlockState(state);
+    // re-render theme grids and ring presets to reflect newly unlocked items
+    try{ renderThemeGrid(); }catch(e){}
+    try{ renderRingPresets(); }catch(e){}
+    // if fully unlocked, enable color picker
+    try{ updateRingPickerEnabledState(); }catch(e){}
+  }catch(e){ console.warn('checkAndApplyNewUnlocks failed', e); }
+}
+
+// Enable/disable ring color custom UI based on full unlock state
+function updateRingPickerEnabledState(){
+  try{
+    const state = loadUnlockState();
+    const enabled = allUnlocked(state);
+    const ringInput = document.getElementById('ringColorInput');
+    const ringBtn = document.getElementById('ringColorCustomBtn');
+    if(ringInput) ringInput.disabled = !enabled;
+    if(ringBtn) ringBtn.disabled = !enabled;
+    // visually indicate disabled via attribute (CSS can style .theme-swatch[disabled])
+    if(ringBtn){ if(enabled) ringBtn.classList.remove('locked'); else ringBtn.classList.add('locked'); }
+  }catch(e){}
+}
 // Preset colors for ring picker (mapped to theme ids)
 const RING_PRESETS = { sand:'#d6b77a', red:'#e05a6a', blue:'#4a8fe0', green:'#34a853', pink:'#f47aa6', silver:'#9aa6b3' };
 const THEMES = [
@@ -1055,24 +1151,25 @@ function renderThemeGrid(){
     level = Math.floor((today && today.bottlesCum ? (today.bottlesCum||0) : (storage.loadCumBase()||0)) / 2) || 0;
   }catch(e){ level = 0; }
 
+  // respect unlock state: sand-type unlocks
+  const unlockState = loadUnlockState();
   grid.innerHTML = THEMES.map(t => {
-    const locked = (t.unlock || 0) > level;
-    const lockAttr = locked ? ` data-unlock="${t.unlock}"` : '';
+    const locked = (unlockState.sand.indexOf(t.id) === -1);
     const lockClass = locked ? ' locked' : '';
-    const aria = locked ? ` aria-disabled="true" title="Lv ${t.unlock} で解放されます"` : ` title="${t.name}"`;
-    return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${lockAttr}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
+    const aria = locked ? ` aria-disabled="true" title="Lv で解放されます"` : ` title="${t.name}"`;
+    return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
   }).join('');
 
   // Also populate background theme grid (if present) with the same swatches
   try{
     const bgGrid = document.getElementById('bgThemeGrid');
     if(bgGrid){
+      const unlockStateBg = unlockState;
       bgGrid.innerHTML = THEMES.map(t => {
-        const locked = (t.unlock || 0) > level;
-        const lockAttr = locked ? ` data-unlock="${t.unlock}"` : '';
+        const locked = (unlockStateBg.bg.indexOf(t.id) === -1);
         const lockClass = locked ? ' locked' : '';
-        const aria = locked ? ` aria-disabled="true" title="Lv ${t.unlock} で解放されます"` : ` title="${t.name}"`;
-        return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${lockAttr}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
+        const aria = locked ? ` aria-disabled="true" title="Lv で解放されます"` : ` title="${t.name}"`;
+        return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
       }).join('');
     }
   }catch(e){/* ignore */}
@@ -1100,18 +1197,24 @@ function renderRingPresets(){
     const input = document.getElementById('ringColorInput');
     const saved = (function(){ try{ return (localStorage.getItem(RING_COLOR_KEY)||'').trim().toLowerCase(); }catch(e){ return ''; }})();
     // Render same style swatches as the theme grid so buttons look identical
+    const unlockState = loadUnlockState();
     container.innerHTML = THEMES.map(t => {
       const color = RING_PRESETS[t.id] || t.c2 || t.c1 || '#cccccc';
-      // mark pressed when saved color equals preset
+      // locked if this ring preset hasn't been unlocked yet
+      const locked = (unlockState.ring.indexOf(t.id) === -1);
       const pressed = (saved && saved === color.trim().toLowerCase()) ? ' aria-pressed="true"' : '';
-      return `<button class="theme-swatch" type="button" data-theme="${t.id}" data-color="${color}"${pressed} title="${t.name}"><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}</div></button>`;
+      const lockClass = locked ? ' locked' : '';
+      const aria = locked ? ` aria-disabled="true" title="解放されるまで使用できません"` : ` title="${t.name}"`;
+      return `<button class="theme-swatch${lockClass}" type="button" data-theme="${t.id}" data-color="${color}"${pressed}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
     }).join('');
 
     // delegate clicks to the container so newly created buttons respond
-    container.addEventListener('click', function(ev){
+    container.onclick = function(ev){
       try{
         const btn = ev.target.closest && ev.target.closest('.theme-swatch');
         if(!btn) return;
+        // ignore clicks on locked presets
+        if(btn.classList.contains('locked')) return;
         const id = btn.getAttribute('data-theme');
         const color = btn.getAttribute('data-color');
         if(color){
@@ -1122,7 +1225,7 @@ function renderRingPresets(){
           try{ btn.setAttribute('aria-pressed','true'); }catch(e){}
         }
       }catch(e){ console.warn('ring preset delegation failed', e); }
-    });
+    };
   }catch(e){ console.warn('renderRingPresets failed', e); }
 }
 
@@ -1138,8 +1241,8 @@ function closeThemes(){
 try{
   const themeOpen = document.getElementById('themeOpenBtn'); if(themeOpen) themeOpen.addEventListener('click', ()=>{ openThemes(); });
   const themeClose = document.getElementById('themeCloseBtn'); if(themeClose) themeClose.addEventListener('click', ()=>{ closeThemes(); });
-  const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(!id) return; try{ const themeObj = THEMES.find(x=>x.id===id); const lvlEl = document.getElementById('level'); const cur = lvlEl ? Number((lvlEl.textContent||'0').trim())||0 : 0; if(themeObj && (themeObj.unlock||0) > cur){ try{ showToast(`Lv ${themeObj.unlock} で解放されます`); }catch(e){} return; } }catch(e){} if(id){ applyThemeId(id); closeThemes(); } }); }
-  const bgThemeGrid = document.getElementById('bgThemeGrid'); if(bgThemeGrid){ bgThemeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(!id) return; try{ const themeObj = THEMES.find(x=>x.id===id); const lvlEl = document.getElementById('level'); const cur = lvlEl ? Number((lvlEl.textContent||'0').trim())||0 : 0; if(themeObj && (themeObj.unlock||0) > cur){ try{ showToast(`Lv ${themeObj.unlock} で解放されます`); }catch(e){} return; } }catch(e){} if(id){ applyBgThemeId(id); closeThemes(); } }); }
+  const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; if(btn.classList.contains('locked')){ try{ showToast('この砂の色はまだ解放されていません'); }catch(e){} return; } const id = btn.getAttribute('data-theme'); if(!id) return; if(id){ applyThemeId(id); closeThemes(); } }); }
+  const bgThemeGrid = document.getElementById('bgThemeGrid'); if(bgThemeGrid){ bgThemeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; if(btn.classList.contains('locked')){ try{ showToast('この背景はまだ解放されていません'); }catch(e){} return; } const id = btn.getAttribute('data-theme'); if(!id) return; if(id){ applyBgThemeId(id); closeThemes(); } }); }
 }catch(e){/* ignore binding errors */}
 
 // Apply saved theme on load (or default to 'sand')
@@ -1152,6 +1255,10 @@ try{
   // Apply saved custom ring color if present
   try{ const savedRing = localStorage.getItem(RING_COLOR_KEY); if(savedRing) applyRingColor(savedRing); }catch(e){}
 }catch(e){}
+// After initial theme/load, ensure unlocks are processed and UI updated
+try{ checkAndApplyNewUnlocks(); renderRingPresets(); updateRingPickerEnabledState(); }catch(e){}
+// Also poll occasionally to detect level changes and apply unlocks (safe fallback)
+try{ setInterval(checkAndApplyNewUnlocks, 2500); }catch(e){}
 
 
 // Mobile-visible toast helper for environments without console (iPhone)
