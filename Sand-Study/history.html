@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>履歴と分析</title>
   <link rel="stylesheet" href="styles.css?v=28">
-  <!-- Shared site styles (modals, buttons, top-actions) -->
-  <link rel="stylesheet" href="../assets/css/styles.css">
   <style>
     /* Test page specific overrides - モダンデザイン with guaranteed centering */
     /* body background moved into styles.css .bg-heatmap so multiple pages can share it */
@@ -178,7 +176,7 @@
 </head>
 <body class="bg-heatmap">
   <div class="container">
-    <!-- Top-right actions (設定 / ログイン) - reuse main.js handlers -->
+    <!-- Top-right actions (設定 / ログイン) - reused from index.html so login UI is available on history page -->
     <div class="top-actions">
       <a id="topBtnSettings" class="button" href="#">設定</a>
       <a id="topBtnSignIn" class="button" href="#">ログイン</a>
@@ -288,6 +286,23 @@
     </div>
   </div>
 
+  <!-- Login modal (shared with index.html) -->
+  <div id="loginModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3>サインイン</h3>
+      <div class="modal-body">
+        <label>メール<input id="topAuthEmail" type="email" placeholder="you@example.com"></label>
+        <label>パスワード<input id="topAuthPassword" type="password" placeholder="パスワード"></label>
+        <div class="modal-actions">
+          <button id="topBtnLogin" class="button">サインイン</button>
+          <button id="topBtnRegister" class="button top-btn-register">新規登録</button>
+          <button id="topBtnClose" class="button top-btn-close">閉じる</button>
+        </div>
+        <p id="topLoginStatus" class="top-login-status">未接続</p>
+      </div>
+    </div>
+  </div>
+
     <!-- Apply saved UI theme (so history page reflects chosen theme even when opened directly) -->
     <script>
       (function(){
@@ -321,29 +336,11 @@
         }catch(e){}
       })();
     </script>
-
-    <!-- Login modal (shared with index) -->
-    <div id="loginModal" class="modal-overlay" aria-hidden="true">
-      <div class="modal">
-        <h3>サインイン</h3>
-        <div class="modal-body">
-          <label>メール<input id="topAuthEmail" type="email" placeholder="you@example.com"></label>
-          <label>パスワード<input id="topAuthPassword" type="password" placeholder="パスワード"></label>
-          <div class="modal-actions">
-            <button id="topBtnLogin" class="button">サインイン</button>
-            <button id="topBtnRegister" class="button top-btn-register">新規登録</button>
-            <button id="topBtnClose" class="button top-btn-close">閉じる</button>
-          </div>
-          <p id="topLoginStatus" class="top-login-status">未接続</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Include shared main handlers (top actions/login) and firebase-init -->
-    <script src="../assets/js/main.js"></script>
-    <!-- Initialize firebase early (loads compat SDKs + server config and sets auth persistence) -->
-    <script src="/assets/js/firebase-init.js"></script>
-    <!-- Reuse shared history rendering logic -->
-    <script type="module" src="history.js?v=28"></script>
+  <!-- Initialize firebase early (loads compat SDKs + server config and sets auth persistence) -->
+  <script src="/assets/js/firebase-init.js"></script>
+  <!-- Shared main behaviors (login modal handler, top-actions) -->
+  <script src="../assets/js/main.js"></script>
+  <!-- Reuse shared history rendering logic -->
+  <script type="module" src="history.js?v=28"></script>
   </body>
   </html>
