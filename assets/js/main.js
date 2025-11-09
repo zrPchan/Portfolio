@@ -14,28 +14,23 @@ function loadScript(src){
 }
 
 async function tryInitFirebase(){
-	if(typeof window.firebase !== 'undefined') return true;
+	// If firebase is already present or the shared initializer ran, assume initialized
+	if(typeof window.firebase !== 'undefined' || window.__FIREBASE_INITIALIZED__) return true;
 	try{
-		// load compat SDKs (stable recommended version)
-		console.debug('Loading Firebase compat SDKs...');
-		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
-		await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
-		console.debug('Firebase compat SDKs loaded:', typeof window.firebase !== 'undefined');
-		// try to load local config (optional) which should set window.FIREBASE_CONFIG
-		try{
-			console.debug('Attempting to load /assets/js/firebase-config.js');
-			await loadScript('/assets/js/firebase-config.js');
-			console.debug('Loaded /assets/js/firebase-config.js:', typeof window.FIREBASE_CONFIG !== 'undefined');
-		}catch(_){
-			console.debug('/assets/js/firebase-config.js not found or failed to load');
-			// no local config — that's fine, we just won't initialize automatically
+		// Prefer the centralized initializer `firebase-init.js` so SDK loading is single-sourced.
+		// Attempt to load the shared initializer if it's not already present.
+		if(!document.querySelector('script[src="/assets/js/firebase-init.js"]')){
+			try{ await loadScript('/assets/js/firebase-init.js'); }catch(_){}
 		}
-		console.debug('window.FIREBASE_CONFIG exists?', !!window.FIREBASE_CONFIG, 'firebase defined?', typeof firebase !== 'undefined');
-		if(window.FIREBASE_CONFIG && typeof firebase !== 'undefined'){
-			try{ firebase.initializeApp(window.FIREBASE_CONFIG); console.info('Firebase initialized from /assets/js/firebase-config.js'); return true; }catch(e){ console.warn('Firebase init failed', e); }
+		// Wait briefly for firebase-init to initialize Firebase
+		const start = Date.now();
+		while(Date.now() - start < 1500){
+			if(window.__FIREBASE_INITIALIZED__ || typeof window.firebase !== 'undefined') break;
+			await new Promise(r => setTimeout(r, 50));
 		}
-	}catch(e){ console.warn('Failed to load Firebase SDKs', e); }
+		if(typeof window.firebase !== 'undefined'){ console.debug('Firebase available after firebase-init:', !!window.FIREBASE_CONFIG); return true; }
+	}catch(e){ console.warn('Error while trying to initialize firebase via firebase-init', e); }
+	// If we reach here, firebase is not initialized and we do NOT attempt to load SDKs here anymore.
 	return false;
 }
 
