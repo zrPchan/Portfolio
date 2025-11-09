@@ -31,8 +31,9 @@ body::before{
     left:0;
     width:100%;
     height:100%;
-    background:radial-gradient(circle at 20% 50%, rgba(59,130,246,0.1) 0%, transparent 50%),
-               radial-gradient(circle at 80% 80%, rgba(168,85,247,0.08) 0%, transparent 50%);
+    /* use theme hue for subtle decorative glows so themes affect the background accents */
+    background:radial-gradient(circle at 20% 50%, hsla(var(--theme-hue),85%,52%,0.08) 0%, transparent 50%),
+               radial-gradient(circle at 80% 80%, hsla(var(--theme-hue),85%,62%,0.06) 0%, transparent 50%);
     pointer-events:none;
     z-index:0;
 }
@@ -46,8 +47,8 @@ header{position:relative}
 
 /* Emergency visibility override: ensure top-actions appear above other content */
 .top-actions{position:fixed!important;right:16px!important;top:16px!important;z-index:9999!important}
-.top-actions .button{background:#ffffff!important;color:#0b1220!important;border:1px solid rgba(11,18,32,0.08)!important}
-.top-actions .button:focus{outline:2px solid rgba(99,102,241,0.18)!important}
+.top-actions .button{background:var(--card)!important;color:var(--text)!important;border:1px solid rgba(255,255,255,0.06)!important}
+.top-actions .button:focus{outline:2px solid hsla(var(--theme-hue),85%,52%,0.18)!important}
 h1{
     font-size:3.5rem;
     font-weight:800;
@@ -149,7 +150,7 @@ h1{
     margin-bottom:20px;
 }
 .tag{
-    background:rgba(59,130,246,0.15);
+    background:hsla(var(--theme-hue),85%,52%,0.15);
     color:var(--accent-bright);
     padding:4px 12px;
     border-radius:6px;
@@ -168,11 +169,11 @@ a.button{
     font-weight:600;
     font-size:0.95rem;
     transition:all 0.3s;
-    box-shadow:0 4px 12px rgba(59,130,246,0.3);
+    box-shadow:0 4px 12px hsla(var(--theme-hue),85%,52%,0.3);
 }
 a.button:hover{
     transform:translateY(-2px);
-    box-shadow:0 8px 24px rgba(59,130,246,0.4);
+    box-shadow:0 8px 24px hsla(var(--theme-hue),85%,52%,0.4);
 }
 a.button::after{
     content:'→';

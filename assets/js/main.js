@@ -82,15 +82,38 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
 	// Optional: update UI on auth state change
 	if(typeof window.firebase !== 'undefined' && window.firebase.auth){
+		function updateLoginUI(isSignedIn){
+			try{ localStorage.setItem('signedIn', isSignedIn ? '1' : '0'); }catch(e){}
+			if(!btn) return;
+			if(isSignedIn){
+				// Show logged-in state text
+				btn.textContent = 'ログイン済み';
+				// Remove modal-opening behavior while signed in
+				try{ btn.removeEventListener('click', showModal); }catch(e){}
+			} else {
+				btn.textContent = 'ログイン';
+				// restore modal opener
+				try{ btn.addEventListener('click', (e)=>{ e.preventDefault(); showModal(); if(emailEl) emailEl.focus(); }); }catch(e){}
+			}
+		}
+
 		firebase.auth().onAuthStateChanged(user => {
 			if(user){
-				if(btn) btn.textContent = 'サインアウト';
-				btn.removeEventListener('click', showModal);
-				btn.addEventListener('click', async (e)=>{ e.preventDefault(); try{ await firebase.auth().signOut(); btn.textContent='ログイン'; btn.addEventListener('click', (ev)=>{ ev.preventDefault(); showModal(); }); }catch(err){ console.warn(err); } });
+				updateLoginUI(true);
 			} else {
-				if(btn) btn.textContent = 'ログイン';
+				updateLoginUI(false);
 			}
 		});
+	} else {
+		// No Firebase: restore UI from localStorage (simple fallback)
+		try{
+			const val = localStorage.getItem('signedIn');
+			if(val === '1'){
+				btn && (btn.textContent = 'ログイン済み');
+			} else {
+				btn && (btn.textContent = 'ログイン');
+			}
+		}catch(e){}
 	}
 
 	// --- Diagnostic: top-actions visibility helper (logging only) ---
