@@ -1,10 +1,14 @@
 :root{
+    /* Single-hue theme: set --theme-hue to change the whole site's accent hue */
+    --theme-hue: 212; /* default: blue */
     --bg-start: #0f172a;
     --bg-end: #1e293b;
     --card: rgba(30, 41, 59, 0.5);
     --card-hover: rgba(51, 65, 85, 0.6);
-    --accent: #3b82f6;
-    --accent-bright: #60a5fa;
+    /* derive accents from single hue for a consistent one-color gradient */
+    --accent: hsl(var(--theme-hue) 85% 52%);
+    --accent-bright: hsl(var(--theme-hue) 85% 62%);
+    --accent-2: hsl(var(--theme-hue) 85% 72%);
     --text: #f1f5f9;
     --text-muted: #94a3b8;
     --border: rgba(148, 163, 184, 0.1);

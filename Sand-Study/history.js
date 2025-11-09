@@ -36,33 +36,47 @@ function localTimeString(d = new Date()){
   return `${hh}:${mm}`;
 }
 
-// Shared color gradient: t in [0,1] -> color between dark purple -> purple -> cyan -> green -> yellow -> orange -> red -> dark red
+// Single-hue color gradient: t in [0,1] -> color on the current theme hue
+function hslToRgb(h, s, l){
+  // h,s,l in [0,1]
+  let r, g, b;
+  if(s === 0){ r = g = b = l; }
+  else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const hue2rgb = (p, q, t) => {
+      if(t < 0) t += 1;
+      if(t > 1) t -= 1;
+      if(t < 1/6) return p + (q - p) * 6 * t;
+      if(t < 1/2) return q;
+      if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+// Shared color gradient using single theme hue. Returns an rgb() string or null for t==0.
 function colorFromPercent(t){
   if(typeof t !== 'number' || !isFinite(t)) t = 0;
   t = Math.max(0, Math.min(1, t));
-  if(t === 0) return null; // caller can decide pale background for zero/no-data
-  const stops = [
-    [76,29,149],   // #4c1d95 (dark purple)
-    [109,40,217],  // #6d28d9 (purple)
-    [6,182,212],   // #06b6d4 (cyan)
-    [16,185,129],  // #10b981 (green)
-    [250,204,21],  // #facc15 (yellow)
-    [251,146,60],  // #fb923c (orange)
-    [239,68,68],   // #ef4444 (red)
-    [153,27,27]    // #991b1b (dark red)
-  ];
-  const n = stops.length;
-  const scaled = t * (n - 1);
-  const i = Math.floor(scaled);
-  const frac = scaled - i;
-  if(i >= n-1) {
-    const c = stops[n-1]; return `rgb(${c[0]},${c[1]},${c[2]})`;
-  }
-  const a = stops[i], b = stops[i+1];
-  const r = Math.round(a[0] + frac * (b[0]-a[0]));
-  const g = Math.round(a[1] + frac * (b[1]-a[1]));
-  const bl = Math.round(a[2] + frac * (b[2]-a[2]));
-  return `rgb(${r},${g},${bl})`;
+  if(t === 0) return null;
+  let hue = 212; // default
+  try{
+    const cs = getComputedStyle(document.documentElement);
+    const hv = cs.getPropertyValue('--theme-hue');
+    if(hv) hue = Number(hv.trim()) || hue;
+  }catch(e){ /* ignore */ }
+  // saturation and lightness mapping: lightness 92% (very pale) -> 30% (dark) as t goes 0->1
+  const sat = 0.85;
+  const lightHigh = 0.92;
+  const lightLow = 0.30;
+  const l = lightHigh + (lightLow - lightHigh) * t;
+  const rgb = hslToRgb((hue % 360) / 360, sat, l);
+  return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
 }
 
 // 判断: rgb/rgba の色文字列が渡されたら相対輝度を計算して暗色か判定
