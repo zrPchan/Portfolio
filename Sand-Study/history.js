@@ -712,24 +712,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const syncStatus = document.getElementById('syncStatus');
 
   function setAuthUI(signedIn, uid){
-    // Also handle sign-up button and email/password inputs when available
-    const authEmailEl = document.getElementById('authEmail');
-    const authPasswordEl = document.getElementById('authPassword');
-    const btnSignUp = document.getElementById('btnSignUp');
+    // Minimal UI control for history page: only show sign-out button if present and update status
     if(signedIn){
       btnSignIn && (btnSignIn.style.display = 'none');
-      btnSignUp && (btnSignUp.style.display = 'none');
       btnSignOut && (btnSignOut.style.display = '');
-      if(authEmailEl) authEmailEl.style.display = 'none';
-      if(authPasswordEl) authPasswordEl.style.display = 'none';
-      syncStatus.textContent = '接続: ' + (uid || '認証済み');
+      syncStatus && (syncStatus.textContent = '接続: ' + (uid || '認証済み'));
     } else {
       btnSignIn && (btnSignIn.style.display = '');
-      btnSignUp && (btnSignUp.style.display = '');
       btnSignOut && (btnSignOut.style.display = 'none');
-      if(authEmailEl) authEmailEl.style.display = '';
-      if(authPasswordEl) authPasswordEl.style.display = '';
-      syncStatus.textContent = '未接続';
+      syncStatus && (syncStatus.textContent = '未接続');
     }
   }
 
@@ -795,41 +786,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
       });
 
-      // Email/password auth: use the inputs added to history.html
-      const authEmail = document.getElementById('authEmail');
-      const authPassword = document.getElementById('authPassword');
-      const btnSignUp = document.getElementById('btnSignUp');
-
-      btnSignIn?.addEventListener('click', async ()=>{
-        const email = (authEmail && authEmail.value || '').trim();
-        const password = (authPassword && authPassword.value) || '';
-        if(!email || !password){ alert('メールとパスワードを入力してください'); return; }
-        try{
-          await auth.signInWithEmailAndPassword(email, password);
-        }catch(err){
-          // If user doesn't exist, offer to create (or instruct to use 新規登録)
-          if(err && err.code === 'auth/user-not-found'){
-            if(confirm('ユーザーが見つかりません。新規登録しますか？')){
-              try{ await auth.createUserWithEmailAndPassword(email, password); alert('アカウントを作成しました。'); }
-              catch(e){ alert('登録に失敗しました: '+(e && e.message || e)); }
-            }
-          } else {
-            alert('サインインに失敗しました: '+(err && err.message || String(err)));
-          }
-        }
-      });
-
-      // Explicit sign-up button
-      btnSignUp?.addEventListener('click', async ()=>{
-        const email = (authEmail && authEmail.value || '').trim();
-        const password = (authPassword && authPassword.value) || '';
-        if(!email || !password){ alert('メールとパスワードを入力してください'); return; }
-        try{
-          await auth.createUserWithEmailAndPassword(email, password);
-          alert('アカウントを作成しました。ログインしています。');
-        }catch(err){ alert('登録に失敗しました: '+(err && err.message || String(err))); }
-      });
-      btnSignOut?.addEventListener('click', async ()=>{ try{ await auth.signOut(); }catch(e){}});
+      // Note: sign-in UI removed from history page; top-page modal handles sign-in.
 
       // Automatic sync: detect local changes and push, and subscribe to remote changes to merge
       let unsubscribeRemote = null;
@@ -913,6 +870,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Try to initialize Firebase (if SDK loaded later, you can call this from console)
   try{ initFirebaseIfAvailable(); }catch(e){ console.warn('init firebase failed', e); }
+  // No history-page sign-in UI: top-page modal handles sign-in and auth state persists across pages.
   
   // Add resize listener for responsive canvas
   let resizeTimeout;

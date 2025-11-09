@@ -207,3 +207,19 @@ footer a:hover{
     .project{padding:24px}
     .lead{font-size:1rem}
 }
+
+/* Login modal (トップページ専用) */
+.modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-overlay[aria-hidden="false"]{display:flex}
+.modal{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(148,163,184,0.08);padding:20px;border-radius:12px;min-width:320px;max-width:420px}
+.modal h3{margin:0 0 8px 0;color:var(--text)}
+.modal .modal-body{display:flex;flex-direction:column;gap:8px}
+.modal .modal-body label{display:flex;flex-direction:column;font-size:0.9rem;color:var(--text-muted)}
+.modal .modal-body input{padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:6px;background:transparent;color:var(--text)}
+.modal .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.modal .modal-actions .button{padding:8px 12px;border-radius:8px}
+.top-btn-register{background:transparent;color:var(--accent-bright)}
+.top-btn-close{background:transparent;color:var(--text-muted)}
+.top-login-status{color:var(--text-muted);margin-top:8px}
+/* header helper */
+.header-login-wrap{margin-top:12px}

@@ -11,6 +11,9 @@
         <header>
             <h1>zrPchan</h1>
             <p class="subtitle">Developer • Maker • Creator</p>
+            <p class="header-login-wrap">
+                <a id="topBtnSignIn" class="button" href="#">ログイン</a>
+            </p>
         </header>
 
         <section class="about">
@@ -56,6 +59,22 @@
     <footer>
         <p>© 2025 zrPchan • <a href="https://github.com/zrPchan" target="_blank" rel="noopener">GitHub</a></p>
     </footer>
+    <!-- Login modal (トップページ専用) -->
+    <div id="loginModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal">
+            <h3>サインイン</h3>
+            <div class="modal-body">
+                <label>メール<input id="topAuthEmail" type="email" placeholder="you@example.com"></label>
+                <label>パスワード<input id="topAuthPassword" type="password" placeholder="パスワード"></label>
+                <div class="modal-actions">
+                    <button id="topBtnLogin" class="button">サインイン</button>
+                    <button id="topBtnRegister" class="button top-btn-register">新規登録</button>
+                    <button id="topBtnClose" class="button top-btn-close">閉じる</button>
+                </div>
+                <p id="topLoginStatus" class="top-login-status">未接続</p>
+            </div>
+        </div>
+    </div>
     <script src="assets/js/main.js"></script>
 </body>
 </html>
