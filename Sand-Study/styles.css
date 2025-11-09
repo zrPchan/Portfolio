@@ -124,7 +124,13 @@ main{max-width:420px;margin:0 auto;padding:8px}
 button:disabled{opacity:0.5;cursor:not-allowed}
 
 .log-list-outer{border-top:1px solid rgba(0,0,0,0.06);padding:8px}
-.log-list{max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column;gap:12px;margin:0 auto;width:100%;box-sizing:border-box; max-width:840px}
+.log-list{max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column;gap:12px;margin:0 auto;box-sizing:border-box;
+  /* make the log-list wider than the main column by centering it in the viewport
+     width will be the lesser of 840px or viewport minus safe padding */
+  width: min(840px, calc(100vw - 40px));
+  /* center relative to the viewport (not the parent) so the log list is visually centered */
+  position: relative; left: 50vw; transform: translateX(-50%);
+}
 .log-item{
   /* Force a light card background for learning-log cards to improve readability */
   background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));
