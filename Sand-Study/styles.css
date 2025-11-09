@@ -606,7 +606,11 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 
 /* Slight spacing tweak for page content */
 .container > h1{margin-bottom:4px}
-#logs h4{text-align:center;margin-top:8px}
+#logs h4{
+  text-align:center;
+  margin-top:8px;
+  color: var(--text-strong); /* 学習ログ（今日）の色を暗色に指定 */
+}
 
 /* Truncate warning actions (used in modal) */
 .truncate-warning .actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
