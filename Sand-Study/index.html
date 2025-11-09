@@ -139,8 +139,15 @@
                 <div class="ring-color-row">
                   <label for="ringColorInput">タイマーリング色（個別）</label>
                   <div class="ring-color-controls">
-                    <input id="ringColorInput" type="color" value="#4a8fe0" title="タイマーリング色を選択" />
-                    <button id="ringColorReset" type="button" class="btn-ghost">リセット</button>
+                    <!-- Hidden native color input; we expose a themed button that opens this picker -->
+                    <input id="ringColorInput" type="color" value="#4a8fe0" title="タイマーリング色を選択" style="display:none" />
+                    <div id="ringColorCustomWrap">
+                      <button id="ringColorCustomBtn" class="theme-swatch ring-custom" type="button" data-theme="custom" data-color="#4a8fe0" title="カスタム色を選択">
+                        <span class="swatch-sample" style="background:#88b0dd"></span>
+                        <div class="swatch-label">カスタム</div>
+                      </button>
+                      <button id="ringColorReset" type="button" class="btn-ghost">リセット</button>
+                    </div>
                   </div>
                   <div id="ringColorPresets" class="ring-presets" aria-hidden="false"></div>
                   <div class="ring-color-note">ここで選んだ色は背景テーマに優先して保存されます。</div>

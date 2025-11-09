@@ -955,6 +955,7 @@ try{
 try{
   const ringInput = document.getElementById('ringColorInput');
   const ringReset = document.getElementById('ringColorReset');
+  const ringCustomBtn = document.getElementById('ringColorCustomBtn');
   if(ringInput){
     // initialize input to current computed ring color (either saved custom or theme default)
     try{
@@ -964,12 +965,19 @@ try{
       // if value is a rgb() form, try to convert? we just set the input to hex fallback if empty
       if(cur && cur.indexOf('rgb') === -1) ringInput.value = cur;
     }catch(e){}
-    ringInput.addEventListener('input', (ev)=>{ try{ const v = ev.target.value; if(v) applyRingColor(v); }catch(e){} });
+    ringInput.addEventListener('input', (ev)=>{ try{ const v = ev.target.value; if(v) applyRingColor(v);
+        // update custom swatch visual
+        try{ if(ringCustomBtn){ ringCustomBtn.setAttribute('data-color', v); const ss = ringCustomBtn.querySelector('.swatch-sample'); if(ss) ss.style.background = v; } }catch(e){}
+      }catch(e){} });
   }
   if(ringReset){ ringReset.addEventListener('click', ()=>{ try{ applyRingColor(null); // remove custom
       // update input to reflect theme-default value
-      try{ const cs = getComputedStyle(document.documentElement); let def = cs.getPropertyValue('--ring-color') || cs.getPropertyValue('--accent'); def = (def||'').trim(); if(ringInput && def) ringInput.value = def; }catch(e){}
+      try{ const cs = getComputedStyle(document.documentElement); let def = cs.getPropertyValue('--ring-color') || cs.getPropertyValue('--accent'); def = (def||'').trim(); if(ringInput && def) ringInput.value = def; // update visual
+        if(ringCustomBtn && def) { ringCustomBtn.setAttribute('data-color', def); const ss = ringCustomBtn.querySelector('.swatch-sample'); if(ss) ss.style.background = def; }
+      }catch(e){}
     }catch(e){} }); }
+  // open native color picker when custom swatch pressed
+  try{ if(ringCustomBtn && ringInput){ ringCustomBtn.addEventListener('click', ()=>{ try{ ringInput.click(); }catch(e){ try{ /* fallback: focus */ ringInput.focus(); }catch(e){} } }); } }catch(e){}
 }catch(e){/* ignore */}
 
 
@@ -1089,33 +1097,31 @@ function renderRingPresets(){
   try{
     const container = document.getElementById('ringColorPresets');
     if(!container) return;
-    container.innerHTML = '';
-    const saved = (function(){ try{ return localStorage.getItem(RING_COLOR_KEY); }catch(e){ return null; }})();
     const input = document.getElementById('ringColorInput');
-    THEMES.forEach(t => {
-      const id = t.id;
-      const color = RING_PRESETS[id] || t.c2 || t.c1 || '#cccccc';
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'ring-preset';
-      btn.setAttribute('title', t.name);
-      btn.setAttribute('aria-pressed', 'false');
-      btn.dataset.color = color;
-      // style background via JS to avoid inline HTML styles in source
-      try{ btn.style.backgroundColor = color; }catch(e){}
-      btn.addEventListener('click', ()=>{
-        try{
-          // apply and update UI state
+    const saved = (function(){ try{ return (localStorage.getItem(RING_COLOR_KEY)||'').trim().toLowerCase(); }catch(e){ return ''; }})();
+    // Render same style swatches as the theme grid so buttons look identical
+    container.innerHTML = THEMES.map(t => {
+      const color = RING_PRESETS[t.id] || t.c2 || t.c1 || '#cccccc';
+      // mark pressed when saved color equals preset
+      const pressed = (saved && saved === color.trim().toLowerCase()) ? ' aria-pressed="true"' : '';
+      return `<button class="theme-swatch" type="button" data-theme="${t.id}" data-color="${color}"${pressed} title="${t.name}"><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}</div></button>`;
+    }).join('');
+
+    // delegate clicks to the container so newly created buttons respond
+    container.addEventListener('click', function(ev){
+      try{
+        const btn = ev.target.closest && ev.target.closest('.theme-swatch');
+        if(!btn) return;
+        const id = btn.getAttribute('data-theme');
+        const color = btn.getAttribute('data-color');
+        if(color){
           applyRingColor(color);
           if(input) input.value = color;
-          // update aria-pressed on siblings
-          Array.from(container.children).forEach(c=>{ try{ c.setAttribute('aria-pressed','false'); }catch(e){} });
+          // update aria-pressed state
+          Array.from(container.querySelectorAll('.theme-swatch')).forEach(c=>{ try{ c.setAttribute('aria-pressed','false'); }catch(e){} });
           try{ btn.setAttribute('aria-pressed','true'); }catch(e){}
-        }catch(e){ console.warn('ring preset click failed', e); }
-      });
-      // if saved color matches, mark pressed
-      try{ if(saved && saved.trim().toLowerCase() === color.trim().toLowerCase()){ btn.setAttribute('aria-pressed','true'); if(input) input.value = color; } }catch(e){}
-      container.appendChild(btn);
+        }
+      }catch(e){ console.warn('ring preset delegation failed', e); }
     });
   }catch(e){ console.warn('renderRingPresets failed', e); }
 }
