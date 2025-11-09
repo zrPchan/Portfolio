@@ -57,6 +57,9 @@ if(VAPID_PUBLIC && VAPID_PRIVATE){
 const app = express();
 app.use(bodyParser.json());
 
+// Serve shared assets from repository root so /assets/* URLs resolve correctly
+app.use('/assets', express.static(path.join(__dirname, '..', '..', 'assets')));
+
 // Serve static files from parent directory (Sand-Study root)
 app.use(express.static(path.join(__dirname, '..'), { 
   index: 'index.html',  // explicitly serve index.html for directory requests

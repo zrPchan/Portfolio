@@ -55,4 +55,52 @@ document.addEventListener('DOMContentLoaded', ()=>{
 			}
 		});
 	}
+
+	// --- Diagnostic: top-actions visibility helper ---
+	try{
+		const ta = document.querySelector('.top-actions');
+		if(ta){
+			const cs = window.getComputedStyle(ta);
+			console.log('DEBUG: .top-actions computed style', {
+				display: cs.display,
+				visibility: cs.visibility,
+				opacity: cs.opacity,
+				transform: cs.transform,
+				zIndex: cs.zIndex,
+				position: cs.position,
+				top: cs.top,
+				right: cs.right,
+				boundingClientRect: ta.getBoundingClientRect()
+			});
+			// Add a temporary bright outline to help visually locate it (removed after 6s)
+			const prevOutline = ta.style.outline;
+			ta.style.outline = '3px solid lime';
+			setTimeout(()=>{ ta.style.outline = prevOutline; }, 6000);
+		} else {
+			console.warn('DEBUG: .top-actions element not found in DOM');
+		}
+		// Add a temporary top-right debug badge at extremely high z-index to test stacking
+		const badge = document.createElement('div');
+		badge.id = 'top-actions-debug-badge';
+		badge.textContent = 'TOP';
+		Object.assign(badge.style, {
+			position: 'fixed',
+			top: '8px',
+			right: '8px',
+			width: '56px',
+			height: '28px',
+			lineHeight: '28px',
+			textAlign: 'center',
+			background: '#ff2d55',
+			color: '#fff',
+			fontWeight: '700',
+			borderRadius: '6px',
+			padding: '0 8px',
+			zIndex: '2147483647',
+			pointerEvents: 'none',
+			boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
+		});
+		document.body.appendChild(badge);
+		setTimeout(()=>{ const b = document.getElementById('top-actions-debug-badge'); b && b.remove(); }, 6000);
+	} catch(e){ console.warn('DEBUG: error while running top-actions diagnostic', e); }
 });

@@ -34,6 +34,16 @@ body::before{
 }
 main{max-width:900px;margin:0 auto;padding:80px 24px 40px;position:relative;z-index:1}
 header{text-align:center;margin-bottom:60px}
+header{position:relative}
+
+/* Top-right action buttons (ログイン / 設定) */
+.top-actions{position:fixed;right:24px;top:24px;display:flex;gap:8px;align-items:center;z-index:50}
+.top-actions .button{padding:8px 12px;font-size:0.9rem;box-shadow:0 6px 18px rgba(9,30,66,0.08);border:1px solid rgba(255,255,255,0.06)}
+
+/* Emergency visibility override: ensure top-actions appear above other content */
+.top-actions{position:fixed!important;right:16px!important;top:16px!important;z-index:9999!important}
+.top-actions .button{background:#ffffff!important;color:#0b1220!important;border:1px solid rgba(11,18,32,0.08)!important}
+.top-actions .button:focus{outline:2px solid rgba(99,102,241,0.18)!important}
 h1{
     font-size:3.5rem;
     font-weight:800;
@@ -206,6 +216,8 @@ footer a:hover{
     main{padding:60px 20px 32px}
     .project{padding:24px}
     .lead{font-size:1rem}
+    /* On small screens, move top-actions into normal flow */
+    .top-actions{position:static;margin-top:12px;justify-content:center}
 }
 
 /* Login modal (トップページ専用) */

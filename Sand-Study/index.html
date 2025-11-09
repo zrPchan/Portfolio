@@ -29,9 +29,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <!-- Shared site styles and top-actions/modal styles -->
+  <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body class="bg-heatmap">
   <div class="container">
+  <!-- Top-right actions (ログイン / 設定) - injected so top-page login is available when serving Sand-Study -->
+  <div class="top-actions">
+    <a id="topBtnSettings" class="button" href="#">設定</a>
+    <a id="topBtnSignIn" class="button" href="#">ログイン</a>
+  </div>
   <!-- Update banner: shown when a new app version / service worker is available -->
   <div id="updateBanner" role="status" aria-live="polite">
     <div class="msg">新しいバージョンがあります。</div>
@@ -237,6 +244,44 @@
   <div class="actions-right"><button id="iosHelpClose" type="button">閉じる</button></div>
     </form>
   </dialog>
+  <!-- Login modal (トップページ専用) - shared with root index.html -->
+  <div id="loginModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3>サインイン</h3>
+      <div class="modal-body">
+        <label>メール<input id="topAuthEmail" type="email" placeholder="you@example.com"></label>
+        <label>パスワード<input id="topAuthPassword" type="password" placeholder="パスワード"></label>
+        <div class="modal-actions">
+          <button id="topBtnLogin" class="button">サインイン</button>
+          <button id="topBtnRegister" class="button top-btn-register">新規登録</button>
+          <button id="topBtnClose" class="button top-btn-close">閉じる</button>
+        </div>
+        <p id="topLoginStatus" class="top-login-status">未接続</p>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/js/main.js"></script>
+  <script>
+    // Fallback modal behavior: in case ../assets/js/main.js is not loaded,
+    // ensure the login modal can still be opened/closed from Sand-Study page.
+    (function(){
+      function $id(id){ return document.getElementById(id); }
+      const modal = $id('loginModal');
+      const btn = $id('topBtnSignIn');
+      const btnClose = $id('topBtnClose');
+      if(!modal) return;
+      function showModal(){ modal.setAttribute('aria-hidden','false'); modal.style.display='flex'; }
+      function hideModal(){ modal.setAttribute('aria-hidden','true'); modal.style.display='none'; }
+      // Initialize hidden state
+      if(modal.getAttribute('aria-hidden') !== 'false') modal.style.display = 'none';
+      if(btn) btn.addEventListener('click', function(e){ e.preventDefault(); showModal(); });
+      if(btnClose) btnClose.addEventListener('click', function(e){ e.preventDefault(); hideModal(); });
+      // Close when clicking the overlay background
+      modal.addEventListener('click', function(e){ if(e.target === modal) hideModal(); });
+      // Close on Escape
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideModal(); });
+    })();
+  </script>
 
   <dialog id="endModal">
     <form method="dialog" id="endForm">
