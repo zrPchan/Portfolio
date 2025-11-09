@@ -709,23 +709,26 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // If Firebase SDK is loaded via CDN, this block will initialize; otherwise controls remain disabled.
   const btnSignIn = document.getElementById('btnSignIn');
   const btnSignOut = document.getElementById('btnSignOut');
-  const btnUpload = document.getElementById('btnUpload');
-  const btnDownload = document.getElementById('btnDownload');
   const syncStatus = document.getElementById('syncStatus');
-  const optMerge = document.getElementById('optMerge');
 
   function setAuthUI(signedIn, uid){
+    // Also handle sign-up button and email/password inputs when available
+    const authEmailEl = document.getElementById('authEmail');
+    const authPasswordEl = document.getElementById('authPassword');
+    const btnSignUp = document.getElementById('btnSignUp');
     if(signedIn){
-      btnSignIn.style.display = 'none';
-      btnSignOut.style.display = '';
-      btnUpload.disabled = false;
-      btnDownload.disabled = false;
+      btnSignIn && (btnSignIn.style.display = 'none');
+      btnSignUp && (btnSignUp.style.display = 'none');
+      btnSignOut && (btnSignOut.style.display = '');
+      if(authEmailEl) authEmailEl.style.display = 'none';
+      if(authPasswordEl) authPasswordEl.style.display = 'none';
       syncStatus.textContent = '接続: ' + (uid || '認証済み');
     } else {
-      btnSignIn.style.display = '';
-      btnSignOut.style.display = 'none';
-      btnUpload.disabled = true;
-      btnDownload.disabled = true;
+      btnSignIn && (btnSignIn.style.display = '');
+      btnSignUp && (btnSignUp.style.display = '');
+      btnSignOut && (btnSignOut.style.display = 'none');
+      if(authEmailEl) authEmailEl.style.display = '';
+      if(authPasswordEl) authPasswordEl.style.display = '';
       syncStatus.textContent = '未接続';
     }
   }
@@ -792,41 +795,116 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
       });
 
+      // Email/password auth: use the inputs added to history.html
+      const authEmail = document.getElementById('authEmail');
+      const authPassword = document.getElementById('authPassword');
+      const btnSignUp = document.getElementById('btnSignUp');
+
       btnSignIn?.addEventListener('click', async ()=>{
+        const email = (authEmail && authEmail.value || '').trim();
+        const password = (authPassword && authPassword.value) || '';
+        if(!email || !password){ alert('メールとパスワードを入力してください'); return; }
         try{
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await auth.signInWithPopup(provider);
-        }catch(err){ alert('サインインに失敗しました: '+String(err)); }
+          await auth.signInWithEmailAndPassword(email, password);
+        }catch(err){
+          // If user doesn't exist, offer to create (or instruct to use 新規登録)
+          if(err && err.code === 'auth/user-not-found'){
+            if(confirm('ユーザーが見つかりません。新規登録しますか？')){
+              try{ await auth.createUserWithEmailAndPassword(email, password); alert('アカウントを作成しました。'); }
+              catch(e){ alert('登録に失敗しました: '+(e && e.message || e)); }
+            }
+          } else {
+            alert('サインインに失敗しました: '+(err && err.message || String(err)));
+          }
+        }
+      });
+
+      // Explicit sign-up button
+      btnSignUp?.addEventListener('click', async ()=>{
+        const email = (authEmail && authEmail.value || '').trim();
+        const password = (authPassword && authPassword.value) || '';
+        if(!email || !password){ alert('メールとパスワードを入力してください'); return; }
+        try{
+          await auth.createUserWithEmailAndPassword(email, password);
+          alert('アカウントを作成しました。ログインしています。');
+        }catch(err){ alert('登録に失敗しました: '+(err && err.message || String(err))); }
       });
       btnSignOut?.addEventListener('click', async ()=>{ try{ await auth.signOut(); }catch(e){}});
 
-      // Upload current localStorage to Firestore (user doc)
-      btnUpload?.addEventListener('click', async ()=>{
-        const user = auth.currentUser;
-        if(!user){ alert('ログインしてください'); return; }
-        if(!confirm('リモートにアップロードするとリモートのデータが上書きされます。続行しますか？')) return;
-        try{
-          const payload = exportAllLocalStorageAsObject();
-          await db.collection('users').doc(user.uid).set({ data: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-          alert('アップロード完了しました');
-        }catch(err){ alert('アップロード失敗: '+String(err)); }
-      });
+      // Automatic sync: detect local changes and push, and subscribe to remote changes to merge
+      let unsubscribeRemote = null;
+      let lastLocalSnapshot = JSON.stringify(exportAllLocalStorageAsObject());
+      let lastLocalWrite = 0; // ms since epoch
+      let autoUploadTimer = null;
+      const AUTO_UPLOAD_DEBOUNCE = 2000; // ms
 
-      // Download remote -> local (overwrite or merge)
-      btnDownload?.addEventListener('click', async ()=>{
-        const user = auth.currentUser;
-        if(!user){ alert('ログインしてください'); return; }
+      function scheduleAutoUpload(){
+        if(autoUploadTimer) clearTimeout(autoUploadTimer);
+        autoUploadTimer = setTimeout(async ()=>{
+          const user = auth.currentUser;
+          if(!user) return;
+          try{
+            const payload = exportAllLocalStorageAsObject();
+            await db.collection('users').doc(user.uid).set({ data: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            lastLocalWrite = Date.now();
+            lastLocalSnapshot = JSON.stringify(payload);
+            syncStatus && (syncStatus.textContent = '自動アップロード: ' + new Date().toLocaleTimeString());
+          }catch(e){ console.warn('自動アップロード失敗', e); syncStatus && (syncStatus.textContent = 'アップロード失敗'); }
+        }, AUTO_UPLOAD_DEBOUNCE);
+      }
+
+      // Poll localStorage snapshot every 3s to detect changes (works across all code paths without invasive hooks)
+      const localPollInterval = setInterval(()=>{
         try{
-          const doc = await db.collection('users').doc(user.uid).get();
-          if(!doc.exists){ alert('リモートにデータが見つかりません'); return; }
-          const payload = doc.data().data || {};
-          const merge = !!(optMerge && optMerge.checked);
-          const doOverwrite = merge ? confirm('マージを実行します。続行しますか？') : confirm('リモートの内容でローカルを上書きします。続行しますか？');
-          if(!doOverwrite) return;
-          importAllFromJsonObj(payload, {merge});
-          alert('ダウンロードとインポートが完了しました');
-          renderAll();
-        }catch(err){ alert('ダウンロード失敗: '+String(err)); }
+          const snap = JSON.stringify(exportAllLocalStorageAsObject());
+          if(snap !== lastLocalSnapshot){
+            lastLocalSnapshot = snap;
+            scheduleAutoUpload();
+          }
+        }catch(e){ /* ignore */ }
+      }, 3000);
+
+      // Subscribe to remote doc changes and merge when remote is newer
+      function attachRemoteListener(uid){
+        if(unsubscribeRemote) unsubscribeRemote();
+        const docRef = db.collection('users').doc(uid);
+        unsubscribeRemote = docRef.onSnapshot(doc => {
+          if(!doc.exists) return;
+          const data = doc.data() || {};
+          const payload = data.data || {};
+          const remoteTs = data.updatedAt ? (data.updatedAt.toMillis ? data.updatedAt.toMillis() : (new Date(data.updatedAt).getTime())) : 0;
+          // If remote is newer than our last local write, apply it
+          if(remoteTs && remoteTs > (lastLocalWrite + 500)){
+            importAllFromJsonObj(payload, {merge:true});
+            lastLocalSnapshot = JSON.stringify(exportAllLocalStorageAsObject());
+            renderAll();
+            syncStatus && (syncStatus.textContent = 'リモート更新受信: ' + new Date(remoteTs).toLocaleTimeString());
+          }
+        }, err => { console.warn('リモート監視エラー', err); });
+      }
+
+      // On sign out, cleanup
+      function detachRemoteListener(){ if(unsubscribeRemote) { unsubscribeRemote(); unsubscribeRemote = null; } }
+
+      // When auth changes to signed in, fetch initial remote and attach listener
+      auth.onAuthStateChanged(async user => {
+        if(user){
+          setAuthUI(true, user.uid);
+          try{
+            const doc = await db.collection('users').doc(user.uid).get();
+            if(doc.exists){
+              const payload = doc.data().data || {};
+              importAllFromJsonObj(payload, {merge:true});
+              lastLocalSnapshot = JSON.stringify(exportAllLocalStorageAsObject());
+              // Push merged result back to remote to ensure both sides have same merged state
+              scheduleAutoUpload();
+            }
+          }catch(e){ console.warn('初期リモート取得失敗', e); }
+          attachRemoteListener(user.uid);
+        } else {
+          setAuthUI(false);
+          detachRemoteListener();
+        }
       });
 
       firebaseInited = true;
