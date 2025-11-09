@@ -129,7 +129,7 @@ main{max-width:420px;margin:0 auto;padding:8px}
 .circle-wrap{position:relative;width:160px;height:160px;margin:0 auto 8px auto;display:flex;align-items:center;justify-content:center}
 .countdown-ring{transform:rotate(-90deg);transform-box:fill-box;transform-origin:center}
 .ring-bg{stroke:rgba(0,0,0,0.04)}
-.ring-fg{stroke:var(--accent);transition:stroke-dashoffset 0.5s linear}
+.ring-fg{stroke:var(--ring-color, var(--accent));transition:stroke-dashoffset 0.5s linear}
 .circle-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .countdown-text{font-size:22px;font-weight:700;font-family:monospace;color:var(--text-strong)}
 .countdown-sub{font-size:12px;color:var(--text-strong)}
@@ -767,6 +767,16 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .bg-theme-green{ --bg-1:#f6fff6; --bg-2:#f0fff0; }
 .bg-theme-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; }
 .bg-theme-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; }
+
+/* Provide a ring color that pairs nicely with each background theme so the
+  timer ring visually matches the selected background. These use slightly
+  stronger tones derived from the sand-* palette above. */
+.bg-theme-sand{ --ring-color: #d6b77a; }
+.bg-theme-red{ --ring-color: #e05a6a; }
+.bg-theme-blue{ --ring-color: #4a8fe0; }
+.bg-theme-green{ --ring-color: #34a853; }
+.bg-theme-pink{ --ring-color: #f47aa6; }
+.bg-theme-silver{ --ring-color: #9aa6b3; }
 
 /* Solid palettes replace pastel/dark sets: stronger, single-hue sand gradients */
 /* removed Solid palettes by user request */
