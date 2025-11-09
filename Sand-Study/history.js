@@ -65,6 +65,18 @@ function colorFromPercent(t){
   return `rgb(${r},${g},${bl})`;
 }
 
+// 判断: rgb/rgba の色文字列が渡されたら相対輝度を計算して暗色か判定
+function colorIsDark(colorStr){
+  if(!colorStr || typeof colorStr !== 'string') return false;
+  const m = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if(!m) return false;
+  const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
+  // sRGB -> linear
+  const srgb = [r,g,b].map(v => v/255).map(c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
+  const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return L < 0.5; // 閾値: 0.5 未満を暗色とみなす
+}
+
 function parseDateInput(id){ const el=document.getElementById(id); if(!el || !el.value) return null; return el.value; }
 
 function dateRange(start, end){
@@ -243,8 +255,9 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       // invert Y axis: highest score at top
       const y = paddingTop + (numScores - 1 - si) * cellHeight;
       
-      ctx.fillStyle = getColor(clampedDev);
-      ctx.fillRect(x, y, cellWidth - 1, cellHeight - 1);
+  const cellColor = getColor(clampedDev);
+  ctx.fillStyle = cellColor;
+  ctx.fillRect(x, y, cellWidth - 1, cellHeight - 1);
       
       // Draw border
       ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
@@ -254,7 +267,8 @@ function renderChart(canvasId, label, freqData, startDate, endDate){
       // Draw count text if significant
       const minCellWidth = isMobile ? 20 : 30;
       if(count > 0 && cellWidth > minCellWidth){
-        ctx.fillStyle = clampedDev > 60 ? 'white' : '#374151';
+        const textColor = colorIsDark(cellColor) ? 'white' : '#374151';
+        ctx.fillStyle = textColor;
         ctx.font = `bold ${fontSize.cellText}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -396,12 +410,14 @@ function renderCalendarHeatmap(canvasId, startDate, endDate, deltas, weeksArg){
         continue;
       }
       const v = deltas[dayKey] || 0;
-      ctx.fillStyle = getColor(v);
+      const cellColor = getColor(v);
+      ctx.fillStyle = cellColor;
       ctx.fillRect(colX, colY, cellSize, cellSize);
       ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.strokeRect(colX, colY, cellSize, cellSize);
       // small number label if value > 0 and enough space
       if(v > 0 && cellSize > 18){
-        ctx.fillStyle = v > max*0.6 ? '#fff' : '#111827';
+        const textColor = colorIsDark(cellColor) ? '#fff' : '#111827';
+        ctx.fillStyle = textColor;
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(String(v), colX + cellSize/2, colY + cellSize/2);
