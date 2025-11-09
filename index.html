@@ -77,5 +77,29 @@
         </div>
     </div>
     <script src="assets/js/main.js"></script>
+            <script>
+                // Apply saved UI theme on the top page and react to changes from other tabs/windows.
+                (function(){
+                    try{
+                        var THEME_KEY = 'uiTheme:v1';
+                        var el = document.documentElement;
+                        var BG_THEME_KEY = 'uiBgTheme:v1';
+                        function removeClassPrefix(prefix){
+                            try{ var remove = []; el.classList.forEach(function(c){ if(c && c.indexOf(prefix)===0) remove.push(c); }); remove.forEach(function(c){ el.classList.remove(c); }); }catch(e){}
+                        }
+                        function applyThemeName(name){ if(!name) name = 'sand'; removeClassPrefix('theme-'); try{ el.classList.add('theme-' + String(name)); }catch(e){} }
+                        function applyBgThemeName(name){ if(!name) name = 'sand'; removeClassPrefix('bg-theme-'); try{ el.classList.add('bg-theme-' + String(name)); }catch(e){} }
+
+                        // initial apply
+                        try{ var saved = null; saved = localStorage.getItem(THEME_KEY); applyThemeName(saved); }catch(e){}
+                        try{ var savedBg = null; savedBg = localStorage.getItem(BG_THEME_KEY); applyBgThemeName(savedBg); }catch(e){}
+
+                        // react to storage events (when theme/bg-theme is changed in another tab/window)
+                        window.addEventListener('storage', function(ev){
+                            try{ if(ev.key === THEME_KEY){ applyThemeName(ev.newValue); } else if(ev.key === BG_THEME_KEY){ applyBgThemeName(ev.newValue); } }catch(e){}
+                        });
+                    }catch(e){ /* noop */ }
+                })();
+            </script>
 </body>
 </html>

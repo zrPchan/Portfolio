@@ -952,6 +952,7 @@ try{
 
 // --- Theme picker: palettes (basic / solid × sand, red, blue, green, pink, silver)
 const THEME_KEY = 'uiTheme:v1';
+const BG_THEME_KEY = 'uiBgTheme:v1';
 const THEMES = [
   // Basic themes with unlock levels (0 = unlocked by default)
   {id:'sand', name:'Sand', c1:'#fffaf5', c2:'#fff6ec', unlock:0},
@@ -982,6 +983,20 @@ function applyThemeId(id){
   }catch(e){ console.warn('applyThemeId failed', e); }
 }
 
+function applyBgThemeId(id){
+  try{
+    const root = document.documentElement || document.body;
+    if(window._currentBgThemeClass){ try{ root.classList.remove(window._currentBgThemeClass); }catch(e){} }
+    let raw = String(id || '');
+    if(raw.startsWith('bg-theme-')) raw = raw.slice(9);
+    if(raw.startsWith('theme-')) raw = raw.slice(6);
+    const cls = 'bg-theme-' + raw;
+    try{ root.classList.add(cls); window._currentBgThemeClass = cls; }catch(e){}
+    try{ localStorage.setItem(BG_THEME_KEY, raw); }catch(e){}
+    try{ if(typeof render === 'function') render(); }catch(e){}
+  }catch(e){ console.warn('applyBgThemeId failed', e); }
+}
+
 function renderThemeGrid(){
   const grid = document.getElementById('themeGrid'); if(!grid) return;
   // determine current user level from internal data (today.bottlesCum) so picker reflects unlocks even when overlay opened before UI render
@@ -997,6 +1012,20 @@ function renderThemeGrid(){
     const aria = locked ? ` aria-disabled="true" title="Lv ${t.unlock} で解放されます"` : ` title="${t.name}"`;
     return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${lockAttr}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
   }).join('');
+
+  // Also populate background theme grid (if present) with the same swatches
+  try{
+    const bgGrid = document.getElementById('bgThemeGrid');
+    if(bgGrid){
+      bgGrid.innerHTML = THEMES.map(t => {
+        const locked = (t.unlock || 0) > level;
+        const lockAttr = locked ? ` data-unlock="${t.unlock}"` : '';
+        const lockClass = locked ? ' locked' : '';
+        const aria = locked ? ` aria-disabled="true" title="Lv ${t.unlock} で解放されます"` : ` title="${t.name}"`;
+        return `<button class="theme-swatch${lockClass}" data-theme="${t.id}" type="button"${lockAttr}${aria}><span class="swatch-sample" style="background:linear-gradient(90deg, ${t.c1}, ${t.c2})"></span><div class="swatch-label">${t.name}${locked?'<div class="swatch-lock">🔒</div>':''}</div></button>`;
+      }).join('');
+    }
+  }catch(e){/* ignore */}
 }
 
 function openThemes(){
@@ -1025,6 +1054,7 @@ try{
   const themeOpen = document.getElementById('themeOpenBtn'); if(themeOpen) themeOpen.addEventListener('click', ()=>{ openThemes(); });
   const themeClose = document.getElementById('themeCloseBtn'); if(themeClose) themeClose.addEventListener('click', ()=>{ closeThemes(); });
   const themeGrid = document.getElementById('themeGrid'); if(themeGrid){ themeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(!id) return; try{ const themeObj = THEMES.find(x=>x.id===id); const lvlEl = document.getElementById('level'); const cur = lvlEl ? Number((lvlEl.textContent||'0').trim())||0 : 0; if(themeObj && (themeObj.unlock||0) > cur){ try{ showToast(`Lv ${themeObj.unlock} で解放されます`); }catch(e){} return; } }catch(e){} if(id){ applyThemeId(id); closeThemes(); } }); }
+  const bgThemeGrid = document.getElementById('bgThemeGrid'); if(bgThemeGrid){ bgThemeGrid.addEventListener('click', (ev)=>{ const btn = ev.target.closest && ev.target.closest('.theme-swatch'); if(!btn) return; const id = btn.getAttribute('data-theme'); if(!id) return; try{ const themeObj = THEMES.find(x=>x.id===id); const lvlEl = document.getElementById('level'); const cur = lvlEl ? Number((lvlEl.textContent||'0').trim())||0 : 0; if(themeObj && (themeObj.unlock||0) > cur){ try{ showToast(`Lv ${themeObj.unlock} で解放されます`); }catch(e){} return; } }catch(e){} if(id){ applyBgThemeId(id); closeThemes(); } }); }
 }catch(e){/* ignore binding errors */}
 
 // Apply saved theme on load (or default to 'sand')
@@ -1032,6 +1062,8 @@ try{
   const saved = localStorage.getItem(THEME_KEY);
   if(saved) applyThemeId(saved);
   else applyThemeId('sand');
+  // Apply saved background theme if present
+  try{ const savedBg = localStorage.getItem(BG_THEME_KEY); if(savedBg) applyBgThemeId(savedBg); }catch(e){}
 }catch(e){}
 
 

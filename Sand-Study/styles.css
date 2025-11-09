@@ -725,6 +725,14 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .theme-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; --card:#ffffff; --muted:#6b4b5b; --theme-hue: 330; --sand-1:#ffd6ea; --sand-2:#f47aa6; --heatmap-1: var(--accent); --heatmap-2: var(--accent-2); }
 .theme-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; --card:#ffffff; --muted:#55606b; --theme-hue: 220; --sand-1:#e6ebf1; --sand-2:#9aa6b3; --heatmap-1: var(--accent); --heatmap-2: var(--accent-2); }
 
+/* Background-only theme classes: allow independent background palettes without touching sand vars */
+.bg-theme-sand{ --bg-1:#fffaf5; --bg-2:#fff6ec; }
+.bg-theme-red{ --bg-1:#fff6f6; --bg-2:#fff1f1; }
+.bg-theme-blue{ --bg-1:#f6fbff; --bg-2:#eef7ff; }
+.bg-theme-green{ --bg-1:#f6fff6; --bg-2:#f0fff0; }
+.bg-theme-pink{ --bg-1:#fff7fb; --bg-2:#fff2f8; }
+.bg-theme-silver{ --bg-1:#f7f8fa; --bg-2:#eef0f3; }
+
 /* Solid palettes replace pastel/dark sets: stronger, single-hue sand gradients */
 /* removed Solid palettes by user request */
 
@@ -734,3 +742,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 @media (max-width:600px){
   .theme-grid{grid-template-columns:repeat(4,1fr)}
 }
+
+/* layout helper for theme popup: stack two grids vertically with spacing */
+.theme-columns{display:flex;gap:12px;align-items:flex-start;flex-direction:column}
+.fav-subheader{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
