@@ -61,7 +61,7 @@ app.use(bodyParser.json());
 // Dynamic delivery of firebase-config.js from environment variables.
 // This lets you avoid committing firebase-config.js to the repo; instead set
 // the required FIREBASE_* environment variables on the host.
-app.get('/assets/js/firebase-config.js', (req, res) => {
+app.get('/assets/js/firebase-config.js', (req, res, next) => {
   // Required fields: apiKey, authDomain, projectId, appId
   const apiKey = process.env.FIREBASE_API_KEY;
   const authDomain = process.env.FIREBASE_AUTH_DOMAIN;
@@ -71,9 +71,11 @@ app.get('/assets/js/firebase-config.js', (req, res) => {
   const appId = process.env.FIREBASE_APP_ID;
   const measurementId = process.env.FIREBASE_MEASUREMENT_ID;
 
-  // If no API key present, respond 404 so clients fallback (and don't leak empty configs)
+  // If no API key present, allow downstream static middleware to serve a committed
+  // /assets/js/firebase-config.js (useful for local development) by calling next().
+  // If no static file exists either, the request will ultimately 404 as usual.
   if(!apiKey){
-    return res.status(404).send('');
+    return next();
   }
 
   const cfg = {
