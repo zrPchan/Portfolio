@@ -116,20 +116,7 @@
       gap: 24px;
       margin: 0 auto;
     }
-    .heatmap-card {
-      width: 100% !important;
-      max-width: 100% !important;
-      background: white !important;
-      border-radius: 12px !important;
-      padding: 20px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
-      border: 1px solid rgba(102, 126, 234, 0.1) !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      margin: 0 auto !important;
-      box-sizing: border-box !important;
-    }
+    /* Use shared .heatmap-card / .floating-card styles from assets/css/styles.css */
           .heatmap-title {
       font-weight: 600;
             color: #111827; /* 暗色に変更 (よりコントラストを高める) */
@@ -144,23 +131,23 @@
             font-weight: 700;
           }
     canvas {
-      display: block !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-      border: none !important;
-      background: white !important;
-      border-radius: 8px !important;
-      max-width: 100% !important;
-      position: relative !important;
-      left: 0 !important;
-      right: 0 !important;
-      transform: translateX(0) !important;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      max-width: 100%;
+      position: relative;
+      left: 0;
+      right: 0;
+      transform: translateX(0);
     }
     .heatmap-card canvas {
-      display: block !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-      max-width: 100% !important;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 100%;
     }
     .debug-info {
       font-family: 'Courier New', monospace;
@@ -227,7 +214,7 @@
           <div class="controls-row">
             <button id="syncNowBtn" class="btn-primary">同期（アップロード）</button>
             <button id="downloadNowBtn" class="btn-outline">ダウンロード</button>
-            <div id="syncStatus" style="margin-left:12px; font-family:monospace;">未接続</div>
+            <div id="syncStatus">未接続</div>
           </div>
             <!-- Sync controls removed from history page (top-page modal handles sign-in) -->
         </div>
