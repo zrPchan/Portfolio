@@ -84,6 +84,7 @@
       margin: 24px auto 12px auto !important;
       max-width: 100% !important;
       width: 100% !important;
+      color: #111827; /* 暗色にして可読性を上げる */
     }
     /* Bottle list and container width are handled by external stylesheet to keep columns consistent */
     .canvas-wrapper {
@@ -129,9 +130,9 @@
       margin: 0 auto !important;
       box-sizing: border-box !important;
     }
-    .heatmap-title {
+          .heatmap-title {
       font-weight: 600;
-      color: #4a5568;
+      color: #111827; /* 暗色に変更 (よりコントラストを高める) */
       margin-bottom: 12px;
       font-size: 1.1rem;
       text-align: center;
@@ -216,6 +217,12 @@
               <option value="md">MD</option>
             </select>
             <button id="exportCsv" class="btn-outline">エクスポート</button>
+          </div>
+          <!-- Row 4: manual sync controls -->
+          <div class="controls-row">
+            <button id="syncNowBtn" class="btn-primary">同期（アップロード）</button>
+            <button id="downloadNowBtn" class="btn-outline">ダウンロード</button>
+            <div id="syncStatus" style="margin-left:12px; font-family:monospace;">未接続</div>
           </div>
             <!-- Sync controls removed from history page (top-page modal handles sign-in) -->
         </div>

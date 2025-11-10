@@ -881,6 +881,46 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }catch(e){ /* ignore */ }
       }, 3000);
 
+      // Manual sync helpers (triggered by user via UI)
+      async function doUploadNow(){
+        const user = auth.currentUser;
+        if(!user){ syncStatus && (syncStatus.textContent = '未認証: サインインしてください'); return; }
+        try{
+          syncStatus && (syncStatus.textContent = 'アップロード中...');
+          const payload = exportAllLocalStorageAsObject();
+          await db.collection('users').doc(user.uid).set({ data: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          lastLocalWrite = Date.now();
+          lastLocalSnapshot = JSON.stringify(payload);
+          syncStatus && (syncStatus.textContent = 'アップロード完了: ' + new Date().toLocaleTimeString());
+        }catch(e){ console.warn('手動アップロード失敗', e); syncStatus && (syncStatus.textContent = 'アップロード失敗'); }
+      }
+
+      async function doDownloadNow(){
+        const user = auth.currentUser;
+        if(!user){ syncStatus && (syncStatus.textContent = '未認証: サインインしてください'); return; }
+        try{
+          syncStatus && (syncStatus.textContent = 'ダウンロード中...');
+          const doc = await db.collection('users').doc(user.uid).get();
+          if(doc && doc.exists){
+            const payload = doc.data().data || {};
+            importAllFromJsonObj(payload, {merge:true});
+            lastLocalSnapshot = JSON.stringify(exportAllLocalStorageAsObject());
+            renderAll();
+            syncStatus && (syncStatus.textContent = 'ダウンロード完了: ' + new Date().toLocaleTimeString());
+          } else {
+            syncStatus && (syncStatus.textContent = 'リモートにデータがありません');
+          }
+        }catch(e){ console.warn('手動ダウンロード失敗', e); syncStatus && (syncStatus.textContent = 'ダウンロード失敗'); }
+      }
+
+      // Wire UI buttons if present
+      try{
+        const syncBtn = document.getElementById('syncNowBtn');
+        const dlBtn = document.getElementById('downloadNowBtn');
+        if(syncBtn) syncBtn.addEventListener('click', (e)=>{ e.preventDefault(); doUploadNow(); });
+        if(dlBtn) dlBtn.addEventListener('click', (e)=>{ e.preventDefault(); doDownloadNow(); });
+      }catch(e){ /* ignore wiring errors */ }
+
       // Subscribe to remote doc changes and merge when remote is newer
       function attachRemoteListener(uid){
         if(unsubscribeRemote) unsubscribeRemote();
