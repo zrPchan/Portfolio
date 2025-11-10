@@ -789,7 +789,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   async function initFirebaseIfAvailable(){
     if(firebaseInited) return;
-    console.debug('history.js: initFirebaseIfAvailable called', { time: new Date().toISOString(), firebaseDefined: typeof window.firebase !== 'undefined' });
+    console.debug('history.js: initFirebaseIfAvailable called', { time: new Date().toISOString(), firebaseDefined: typeof window.firebase !== 'undefined', FIREBASE_CONFIG: !!(window.FIREBASE_CONFIG || window.__FIREBASE_CONFIG__) });
     try{
       // If firebase-init (shared initializer) is present, wait briefly for it to initialize
       // This avoids double-loading the compat SDKs (which causes a console warning).
@@ -834,11 +834,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const auth = firebase.auth();
       const db = firebase.firestore();
 
-          console.debug('history.js: Firebase present. apps.length=', (firebase.apps && firebase.apps.length) || 0, ' auth exists=', !!firebase.auth);
+          console.debug('history.js: Firebase present. apps.length=', (firebase.apps && firebase.apps.length) || 0, ' auth exists=', !!firebase.auth, 'firestore available=', !!(firebase && firebase.firestore));
           console.debug('history.js: auth.currentUser before attach=', (()=>{ try{ const u = firebase && firebase.auth && firebase.auth().currentUser; return u ? {uid:u.uid, email:u.email} : null;}catch(e){return 'err';}})());
 
           auth.onAuthStateChanged(user => {
-            console.debug('history.js auth.onAuthStateChanged (early):', { time: new Date().toISOString(), user: user ? { uid: user.uid, email: user.email } : null, authCurrentUser: (firebase && firebase.auth && firebase.auth().currentUser) ? { uid: firebase.auth().currentUser.uid } : null });
+                console.debug('history.js auth.onAuthStateChanged (early):', { time: new Date().toISOString(), user: user ? { uid: user.uid, email: user.email } : null, authCurrentUser: (firebase && firebase.auth && firebase.auth().currentUser) ? { uid: firebase.auth().currentUser.uid } : null, firebaseApps: (firebase.apps&&firebase.apps.length) });
             if(user){
               setAuthUI(true, user.uid);
             } else {

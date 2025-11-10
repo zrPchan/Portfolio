@@ -66,6 +66,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 			try{ await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ console.warn('setPersistence failed', e); }
 			await firebase.auth().signInWithEmailAndPassword(email, password);
 			statusEl && (statusEl.textContent = 'サインインに成功しました');
+			// Diagnostic: log current auth state and firebase config
+			try{ console.debug('main.js: signIn success, firebase.apps.length=', (firebase.apps && firebase.apps.length) || 0, 'currentUser=', firebase.auth().currentUser, 'FIREBASE_CONFIG=', window.FIREBASE_CONFIG || window.__FIREBASE_CONFIG__); }catch(_){ }
 			hideModal();
 		}catch(err){ alert('サインイン失敗: '+(err && err.message || err)); }
 	}
@@ -82,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 			try{ await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ console.warn('setPersistence failed', e); }
 			await firebase.auth().createUserWithEmailAndPassword(email, password);
 			statusEl && (statusEl.textContent = 'アカウント作成とログインに成功しました');
+			try{ console.debug('main.js: createUser success, firebase.apps.length=', (firebase.apps && firebase.apps.length) || 0, 'currentUser=', firebase.auth().currentUser); }catch(_){ }
 			hideModal();
 		}catch(err){ alert('登録失敗: '+(err && err.message || err)); }
 	}
