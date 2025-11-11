@@ -760,15 +760,66 @@ document.addEventListener('DOMContentLoaded', ()=>{
       Object.entries(obj.daily || {}).forEach(([k,v]) => localStorage.setItem(k, JSON.stringify(v)));
       return;
     }
-    // merge: simple concat for tasks, shallow merge for daily
+
+    // Helper: dedupe an array of task-like objects.
+    // Uses `id` if present, otherwise falls back to createdAt + JSON fingerprint.
+    function dedupeTasksArray(arr){
+      const seen = new Map();
+      (arr || []).forEach(item => {
+        try{
+          if(!item) return;
+          const key = item.id || (String(item.createdAt||'') + '|' + (item.text || item.mood || JSON.stringify(item)));
+          const prev = seen.get(key);
+          if(!prev){
+            seen.set(key, item);
+          } else {
+            // If both have an updatedAt-like field, keep the newer one
+            const prevTs = Number(prev.updatedAt || prev.modifiedAt || prev.createdAt || 0);
+            const curTs = Number(item.updatedAt || item.modifiedAt || item.createdAt || 0);
+            if(curTs > prevTs) seen.set(key, item);
+          }
+        }catch(e){ /* ignore faulty item */ }
+      });
+      const out = Array.from(seen.values());
+      // sort by createdAt if present
+      out.sort((a,b)=> (Number(a.createdAt||0) - Number(b.createdAt||0)));
+      return out;
+    }
+
+    // Merge tasks: concat, dedupe, sort
     Object.entries(obj.tasks || {}).forEach(([k,v]) => {
-      const existing = JSON.parse(localStorage.getItem(k) || '[]');
-      const merged = existing.concat(v).sort((a,b)=> (a.createdAt||0)-(b.createdAt||0));
-      localStorage.setItem(k, JSON.stringify(merged));
+      try{
+        const existing = JSON.parse(localStorage.getItem(k) || '[]');
+        const merged = dedupeTasksArray(existing.concat(v));
+        localStorage.setItem(k, JSON.stringify(merged));
+      }catch(e){ console.warn('Failed merging tasks for', k, e); }
     });
+
+    // Merge daily: shallow merge but prefer numeric fields conservatively
     Object.entries(obj.daily || {}).forEach(([k,v]) => {
-      const existing = JSON.parse(localStorage.getItem(k) || '{}');
-      localStorage.setItem(k, JSON.stringify(Object.assign({}, existing, v)));
+      try{
+        const existing = JSON.parse(localStorage.getItem(k) || '{}');
+        const merged = Object.assign({}, existing || {}, v || {});
+        // For numeric cumulative fields (layerTotal etc) prefer the larger value to avoid double-counting
+        try{
+          const exLayer = Number(existing.layerTotal || 0);
+          const vLayer = Number(v.layerTotal || 0);
+          merged.layerTotal = Math.max(exLayer, vLayer);
+        }catch(e){}
+        // Recompute bottlesToday from layerTotal when possible so it's consistent
+        try{
+          const cap = (typeof BOTTLE_CAP !== 'undefined') ? Number(BOTTLE_CAP) : 100;
+          merged.bottlesToday = Math.floor((Number(merged.layerTotal || 0)) / (cap || 100));
+        }catch(e){}
+        // lastUpdated -> take the latest ISO string if present
+        try{
+          const exLu = existing.lastUpdated || '';
+          const vLu = v.lastUpdated || '';
+          merged.lastUpdated = (exLu && vLu) ? (exLu > vLu ? exLu : vLu) : (vLu || exLu || new Date().toISOString());
+        }catch(e){ merged.lastUpdated = v.lastUpdated || existing.lastUpdated || new Date().toISOString(); }
+
+        localStorage.setItem(k, JSON.stringify(merged));
+      }catch(e){ console.warn('Failed merging daily for', k, e); }
     });
   }
 
